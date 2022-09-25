@@ -8,4 +8,6 @@ source "$HOME/.cargo/env"
 
 which cargo
 
-python3 build.py ${1:-}
+dir=$(dirname "$0")
+
+python3 "$dir"/build.py "${1:-}"
