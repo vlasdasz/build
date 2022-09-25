@@ -112,17 +112,16 @@ def setup_android():
 
 
 def build_android():
+    android_lib_name = os.environ['ANDROID_LIB_NAME']
 
-    run("cargo build --target aarch64-linux-android --release --lib")
-    run("cargo build --target armv7-linux-androideabi --release --lib")
+    run(f"cargo build -p {android_lib_name} --target aarch64-linux-android --release --lib")
+    run(f"cargo build -p {android_lib_name} --target armv7-linux-androideabi --release --lib")
 
     jni_libs_dir = f"{engine_path}/mobile/android/app/src/main/jniLibs"
 
     run(f"mkdir -p {jni_libs_dir}")
     run(f"mkdir -p {jni_libs_dir}/arm64-v8a")
     run(f"mkdir -p {jni_libs_dir}/armeabi-v7a")
-
-    android_lib_name = os.environ['ANDROID_LIB_NAME']
 
     try:
         os.symlink(f"{engine_path}/target/aarch64-linux-android/release/lib{android_lib_name}.so",
