@@ -112,20 +112,22 @@ def build_android():
     run("cargo build --target aarch64-linux-android --release --lib")
     run("cargo build --target armv7-linux-androideabi --release --lib")
 
-    run("mkdir -p mobile/android/app/src/main/jniLibs/")
-    run("mkdir -p mobile/android/app/src/main/jniLibs/arm64-v8a")
-    run("mkdir -p mobile/android/app/src/main/jniLibs/armeabi-v7a")
+    engine_path = f"../{this_path}"
+
+    jni_libs_dir = f"{engine_path}/mobile/android/app/src/main/jniLibs"
+
+    run(f"mkdir -p {jni_libs_dir}")
+    run(f"mkdir -p {jni_libs_dir}/arm64-v8a")
+    run(f"mkdir -p {jni_libs_dir}/armeabi-v7a")
 
     android_lib_name = os.environ['ANDROID_LIB_NAME']
 
-    engine_path = f"../{this_path}"
-
     try:
         os.symlink(f"{engine_path}/target/aarch64-linux-android/release/lib{android_lib_name}.so",
-                   f"{engine_path}/mobile/android/app/src/main/jniLibs/arm64-v8a/lib{android_lib_name}.so")
-        
+                   f"{jni_libs_dir}/arm64-v8a/lib{android_lib_name}.so")
+
         os.symlink(f"{engine_path}/target/armv7-linux-androideabi/release/lib{android_lib_name}.so",
-                   f"{engine_path}/mobile/android/app/src/main/jniLibs/armeabi-v7a/lib{android_lib_name}.so")
+                   f"{jni_libs_dir}/armeabi-v7a/lib{android_lib_name}.so")
     except FileExistsError:
         print("exists")
 
