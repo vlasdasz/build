@@ -57,7 +57,7 @@ def get_home():
 home = get_home()
 
 this_path = os.path.dirname(os.path.abspath(__file__))
-engine_path = f"../{this_path}"
+engine_path = f"{this_path}/.."
 
 
 def setup_android():
@@ -75,6 +75,9 @@ def setup_android():
 
     os.environ["NDK_INCLUDE_DIR"] = engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
     os.environ["PATH"] += ":" + ndk_bin
+
+    print("NDK bin path:")
+    print(ndk_bin)
 
     if os.path.isdir("ndk"):
         print("NDK directory already exists")
@@ -105,7 +108,7 @@ def setup_android():
                     ndk_bin + "/arm-linux-androideabi-clang++")
 
     for file in glob.glob(ndk_bin + "/*"):
-        run("sudo chmod +x " + file)
+        run("chmod +x " + file)
 
 
 def build_android():
