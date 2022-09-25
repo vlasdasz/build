@@ -57,6 +57,7 @@ def get_home():
 home = get_home()
 
 this_path = os.path.dirname(os.path.abspath(__file__))
+engine_path = f"../{this_path}"
 
 
 def setup_android():
@@ -66,13 +67,13 @@ def setup_android():
 
     host_platform = "linux" if is_linux else "darwin"
     arch_platform = host_platform + "-x86_64"
-    ndk_bin = this_path + "/ndk/bin"
+    ndk_bin = engine_path + "/ndk/bin"
     version = "r22b"
     api_level = "21"
 
     toolchains = "/ndk/android-ndk-" + version + "/toolchains/"
 
-    os.environ["NDK_INCLUDE_DIR"] = this_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
+    os.environ["NDK_INCLUDE_DIR"] = engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
     os.environ["PATH"] += ":" + ndk_bin
 
     if os.path.isdir("ndk"):
@@ -88,7 +89,7 @@ def setup_android():
 
     print("Symlink NDK bin")
 
-    os.symlink(this_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", ndk_bin)
+    os.symlink(engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", ndk_bin)
 
     print("Symlink clang")
     shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang",
@@ -111,8 +112,6 @@ def build_android():
 
     run("cargo build --target aarch64-linux-android --release --lib")
     run("cargo build --target armv7-linux-androideabi --release --lib")
-
-    engine_path = f"../{this_path}"
 
     jni_libs_dir = f"{engine_path}/mobile/android/app/src/main/jniLibs"
 
