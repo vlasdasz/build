@@ -8,6 +8,7 @@ import platform
 import subprocess
 import urllib.request
 
+
 is_windows = platform.system() == "Windows"
 is_mac     = platform.system() == "Darwin"
 is_linux   = platform.system() == "Linux"
@@ -57,21 +58,22 @@ home = get_home()
 
 this_path = os.path.dirname(os.path.abspath(__file__))
 
+
 def setup_android():
 
     print("Add rust targets")
     run("rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android")
 
-    platform = "linux" if is_linux else "darwin"
-    arch_platform = platform + "-x86_64"
-    bin = this_path + "/ndk/bin"
+    host_platform = "linux" if is_linux else "darwin"
+    arch_platform = host_platform + "-x86_64"
+    ndk_bin = this_path + "/ndk/bin"
     version = "r22b"
     api_level = "21"
 
     toolchains = "/ndk/android-ndk-" + version + "/toolchains/"
 
     os.environ["NDK_INCLUDE_DIR"] = this_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
-    os.environ["PATH"] += ":" + bin
+    os.environ["PATH"] += ":" + ndk_bin
 
     if os.path.isdir("ndk"):
         print("NDK directory already exists")
@@ -86,22 +88,22 @@ def setup_android():
 
     print("Symlink NDK bin")
 
-    os.symlink(this_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", bin)
+    os.symlink(this_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", ndk_bin)
 
     print("Symlink clang")
-    shutil.copyfile(bin + "/aarch64-linux-android" + api_level + "-clang",
-                    bin + "/aarch64-linux-android-clang")
-    shutil.copyfile(bin + "/aarch64-linux-android" + api_level + "-clang++",
-                    bin + "/aarch64-linux-android-clang++")
-    shutil.copyfile(bin + "/llvm-ar",
-                    bin + "/aarch64-linux-android-ar")
+    shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang",
+                    ndk_bin + "/aarch64-linux-android-clang")
+    shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang++",
+                    ndk_bin + "/aarch64-linux-android-clang++")
+    shutil.copyfile(ndk_bin + "/llvm-ar",
+                    ndk_bin + "/aarch64-linux-android-ar")
 
-    shutil.copyfile(bin + "/armv7a-linux-androideabi" + api_level + "-clang",
-                    bin + "/arm-linux-androideabi-clang")
-    shutil.copyfile(bin + "/armv7a-linux-androideabi" + api_level + "-clang++",
-                    bin + "/arm-linux-androideabi-clang++")
+    shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang",
+                    ndk_bin + "/arm-linux-androideabi-clang")
+    shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang++",
+                    ndk_bin + "/arm-linux-androideabi-clang++")
 
-    for file in glob.glob(bin + "/*"):
+    for file in glob.glob(ndk_bin + "/*"):
         run("sudo chmod +x " + file)
 
 
@@ -114,11 +116,16 @@ def build_android():
     run("mkdir -p mobile/android/app/src/main/jniLibs/arm64-v8a")
     run("mkdir -p mobile/android/app/src/main/jniLibs/armeabi-v7a")
 
+    android_lib_name = os.environ['ANDROID_LIB_NAME']
+
+    engine_path = f"../{this_path}"
+
     try:
-        os.symlink(this_path + "/target/aarch64-linux-android/release/libtest_game.so",
-                   "mobile/android/app/src/main/jniLibs/arm64-v8a/libtest_game.so")
-        os.symlink(this_path + "/target/armv7-linux-androideabi/release/libtest_game.so",
-                   "mobile/android/app/src/main/jniLibs/armeabi-v7a/libtest_game.so")
+        os.symlink(f"{engine_path}/target/aarch64-linux-android/release/lib{android_lib_name}.so",
+                   f"{engine_path}/mobile/android/app/src/main/jniLibs/arm64-v8a/lib{android_lib_name}.so")
+        
+        os.symlink(f"{engine_path}/target/armv7-linux-androideabi/release/lib{android_lib_name}.so",
+                   f"{engine_path}/mobile/android/app/src/main/jniLibs/armeabi-v7a/lib{android_lib_name}.so")
     except FileExistsError:
         print("exists")
 
@@ -129,7 +136,10 @@ def build_ios():
     run("cargo lipo --release")
     os.chdir("mobile/iOS")
     run("xcodebuild -showsdks")
-    run("xcodebuild -sdk iphonesimulator -scheme TestEngine build")
+
+    ios_project_name = os.environ['IOS_PROJECT_NAME']
+
+    run(f"xcodebuild -sdk iphonesimulator -scheme {ios_project_name} build")
 
 
 print("Arch:")
@@ -142,7 +152,8 @@ if is_linux and desktop:
     if is_fedora:
         print("Fedora")
         run("sudo dnf update")
-        run("sudo dnf install libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel alsa-lib-devel-1.2.6.1-3.fc34.aarch64")
+        run("sudo dnf install libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
+            "alsa-lib-devel-1.2.6.1-3.fc34.aarch64")
     elif is_freebsd:
         print("Freebsd")
         run("sudo pkg update")
