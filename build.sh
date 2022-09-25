@@ -1,6 +1,9 @@
 #!/bin/bash
 
-. ../env.sh
+. ./env.sh
+
+echo "$ANDROID_LIB_NAME"
+echo "$IOS_PROJECT_NAME"
 
 echo Installing rustup:
 curl https://sh.rustup.rs -sSf | sh -s -- -y
