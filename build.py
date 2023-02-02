@@ -60,77 +60,77 @@ this_path = os.path.dirname(os.path.abspath(__file__))
 engine_path = f"{this_path}/.."
 
 
-def setup_android():
+# def setup_android():
 
-    print("Add rust targets")
-    run("rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android")
+#     print("Add rust targets")
+#     run("rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android")
 
-    host_platform = "linux" if is_linux else "darwin"
-    arch_platform = host_platform + "-x86_64"
-    ndk_bin = engine_path + "/ndk/bin"
-    version = "r22b"
-    api_level = "21"
+#     host_platform = "linux" if is_linux else "darwin"
+#     arch_platform = host_platform + "-x86_64"
+#     ndk_bin = engine_path + "/ndk/bin"
+#     version = "r22b"
+#     api_level = "21"
 
-    toolchains = "/ndk/android-ndk-" + version + "/toolchains/"
+#     toolchains = "/ndk/android-ndk-" + version + "/toolchains/"
 
-    os.environ["NDK_INCLUDE_DIR"] = engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
-    os.environ["PATH"] += ":" + ndk_bin
+#     os.environ["NDK_INCLUDE_DIR"] = engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
+#     os.environ["PATH"] += ":" + ndk_bin
 
-    print("NDK bin path:")
-    print(ndk_bin)
+#     print("NDK bin path:")
+#     print(ndk_bin)
 
-    if os.path.isdir("ndk"):
-        print("NDK directory already exists")
-        return
+#     if os.path.isdir("ndk"):
+#         print("NDK directory already exists")
+#         return
 
-    run("mkdir ndk")
+#     run("mkdir ndk")
 
-    print("Downloading NDK")
+#     print("Downloading NDK")
 
-    urllib.request.urlretrieve("https://dl.google.com/android/repository/android-ndk-" + version + "-" + arch_platform + ".zip", "ndk/ndk.zip")
-    shutil.unpack_archive("ndk/ndk.zip", "ndk")
+#     urllib.request.urlretrieve("https://dl.google.com/android/repository/android-ndk-" + version + "-" + arch_platform + ".zip", "ndk/ndk.zip")
+#     shutil.unpack_archive("ndk/ndk.zip", "ndk")
 
-    print("Symlink NDK bin")
+#     print("Symlink NDK bin")
 
-    os.symlink(engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", ndk_bin)
+#     os.symlink(engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", ndk_bin)
 
-    print("Symlink clang")
-    shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang",
-                    ndk_bin + "/aarch64-linux-android-clang")
-    shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang++",
-                    ndk_bin + "/aarch64-linux-android-clang++")
-    shutil.copyfile(ndk_bin + "/llvm-ar",
-                    ndk_bin + "/aarch64-linux-android-ar")
+#     print("Symlink clang")
+#     shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang",
+#                     ndk_bin + "/aarch64-linux-android-clang")
+#     shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang++",
+#                     ndk_bin + "/aarch64-linux-android-clang++")
+#     shutil.copyfile(ndk_bin + "/llvm-ar",
+#                     ndk_bin + "/aarch64-linux-android-ar")
 
-    shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang",
-                    ndk_bin + "/arm-linux-androideabi-clang")
-    shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang++",
-                    ndk_bin + "/arm-linux-androideabi-clang++")
+#     shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang",
+#                     ndk_bin + "/arm-linux-androideabi-clang")
+#     shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang++",
+#                     ndk_bin + "/arm-linux-androideabi-clang++")
 
-    for file in glob.glob(ndk_bin + "/*"):
-        run("chmod +x " + file)
+#     for file in glob.glob(ndk_bin + "/*"):
+#         run("chmod +x " + file)
 
 
-def build_android():
-    android_lib_name = os.environ['ANDROID_LIB_NAME']
+# def build_android():
+#     android_lib_name = os.environ['ANDROID_LIB_NAME']
 
-    run(f"cargo build -p {android_lib_name} --target aarch64-linux-android --release --lib")
-    run(f"cargo build -p {android_lib_name} --target armv7-linux-androideabi --release --lib")
+#     run(f"cargo build -p {android_lib_name} --target aarch64-linux-android --release --lib")
+#     run(f"cargo build -p {android_lib_name} --target armv7-linux-androideabi --release --lib")
 
-    jni_libs_dir = f"{engine_path}/mobile/android/app/src/main/jniLibs"
+#     jni_libs_dir = f"{engine_path}/mobile/android/app/src/main/jniLibs"
 
-    run(f"mkdir -p {jni_libs_dir}")
-    run(f"mkdir -p {jni_libs_dir}/arm64-v8a")
-    run(f"mkdir -p {jni_libs_dir}/armeabi-v7a")
+#     run(f"mkdir -p {jni_libs_dir}")
+#     run(f"mkdir -p {jni_libs_dir}/arm64-v8a")
+#     run(f"mkdir -p {jni_libs_dir}/armeabi-v7a")
 
-    try:
-        os.symlink(f"{engine_path}/target/aarch64-linux-android/release/lib{android_lib_name}.so",
-                   f"{jni_libs_dir}/arm64-v8a/lib{android_lib_name}.so")
+#     try:
+#         os.symlink(f"{engine_path}/target/aarch64-linux-android/release/lib{android_lib_name}.so",
+#                    f"{jni_libs_dir}/arm64-v8a/lib{android_lib_name}.so")
 
-        os.symlink(f"{engine_path}/target/armv7-linux-androideabi/release/lib{android_lib_name}.so",
-                   f"{jni_libs_dir}/armeabi-v7a/lib{android_lib_name}.so")
-    except FileExistsError:
-        print("exists")
+#         os.symlink(f"{engine_path}/target/armv7-linux-androideabi/release/lib{android_lib_name}.so",
+#                    f"{jni_libs_dir}/armeabi-v7a/lib{android_lib_name}.so")
+#     except FileExistsError:
+#         print("exists")
 
 
 def build_ios():
@@ -179,7 +179,10 @@ if is_linux and desktop:
 if ios:
     build_ios()
 elif android:
-    setup_android()
-    build_android()
+    print("Ondroed")
+    run("python3 ./build/android/install_ndk.py")
+    run("python3 ./build/android/build.py")
+    # setup_android()
+    # build_android()
 else:
     run("cargo build --all")
