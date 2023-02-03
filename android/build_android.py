@@ -25,5 +25,6 @@ def run(string):
 
 # lib_name = os.environ["ANDROID_LIB_NAME"]
 
-run(f"cargo build -p {lib_name} --target aarch64-linux-android --release --lib")
+def build_android():
+    run(f"cargo build -p {lib_name} --target aarch64-linux-android --release --lib")
 # run(f"cargo build -p {lib_name} --target armv7-linux-androideabi --release --lib")

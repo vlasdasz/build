@@ -8,6 +8,13 @@ import platform
 import subprocess
 import urllib.request
 
+sys.path.append("build/android")
+
+from install_ndk import install_ndk
+from build_android import build_android
+
+# import application.app.android.install_ndk
+# import application.app.android.build
 
 is_windows = platform.system() == "Windows"
 is_mac     = platform.system() == "Darwin"
@@ -173,16 +180,14 @@ if is_linux and desktop:
         run("sudo apt -y install " + deps)
 
     run("curl https://sh.rustup.rs -sSf | sh -s -- -y")
-    os.environ["PATH"] += ":" + "$HOME/.cargo/bin"
+    os.environ["PATH"] += os.pathsep + "$HOME/.cargo/bin"
 
 
 if ios:
     build_ios()
 elif android:
     print("Ondroed")
-    run("python3 ./build/android/install_ndk.py")
-    run("python3 ./build/android/build.py")
-    # setup_android()
-    # build_android()
+    install_ndk()
+    build_android()
 else:
     run("cargo build --all")

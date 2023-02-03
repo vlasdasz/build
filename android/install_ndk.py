@@ -78,10 +78,15 @@ def download() -> str:
 def make_toolchain(make_tool: str, arch: Arch, api_level: str = "21"):
     root = f"ndk/{arch}"
     run(f"{python_exe()} {make_tool} --api {api_level} --arch {arch} --install-dir {root}")
-    ndk_bin = os.path.abspath(root) + "/bin"
+    root = os.path.abspath(root)
+    ndk_bin = root + "/bin"
     os.environ["PATH"] += os.pathsep + ndk_bin
 
-    if not is_windows:
+    os.environ["NDK_HOME"] = root
+
+    shutil.copyfile(f"{ndk_bin}/llvm-ar", f"{ndk_bin}/aarch64-linux-android-ar")
+
+    if is_unix:
         for file in glob.glob(ndk_bin + "/*"):
             run("chmod +x " + file)
 
@@ -90,20 +95,21 @@ def make_toolchain(make_tool: str, arch: Arch, api_level: str = "21"):
     print(f"Clang path:")
     print(clang)
 
-    if is_windows:
-        os.remove(clang)
-        shutil.copyfile(f"{clang}.cmd", clang)
+    # if is_windows:
+    #     os.remove(clang)
+    #     shutil.copyfile(f"{clang}.cmd", clang)
 
-    # arch.check_clang_version()
 
 def unpack(ndk: str):
     if is_mac:
         run("7z -aos x -ondk " + ndk)
-        run("mv -f ndk/Android\ NDK\ r25c/AndroidNDK9519653.app/Contents/NDK/* ndk/")
+        run("mkdir ndk/android-ndk-r25c")
+        run("mv -f ndk/Android\ NDK\ r25c/AndroidNDK9519653.app/Contents/NDK/* ndk/android-ndk-r25c/")
         run("rm -rf ndk/Android\ NDK\ r25c")
     elif is_windows or is_linux:
         shutil.unpack_archive(ndk, "ndk")
-        make_toolchain("ndk/android-ndk-r25c/build/tools/make_standalone_toolchain.py", Arch.arm64)
+    
+    make_toolchain("ndk/android-ndk-r25c/build/tools/make_standalone_toolchain.py", Arch.arm64)
 
 
 def install_toolchains():
@@ -111,6 +117,7 @@ def install_toolchains():
     run("rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android")
 
 
-setup()
-unpack(download())
-install_toolchains()
+def install_ndk():
+    setup()
+    unpack(download())
+    install_toolchains()
