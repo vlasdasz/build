@@ -11,6 +11,7 @@ import urllib.request
 sys.path.append("build/android")
 
 from install_ndk import install_ndk
+from install_ndk import Arch
 from build_android import build_android
 
 # import application.app.android.install_ndk
@@ -63,8 +64,8 @@ def get_home():
 
 home = get_home()
 
-this_path = os.path.dirname(os.path.abspath(__file__))
-engine_path = f"{this_path}/.."
+this_script_path = os.path.dirname(os.path.abspath(__file__))
+engine_path = f"{this_script_path}/.."
 
 
 # def setup_android():
@@ -188,6 +189,8 @@ if ios:
 elif android:
     print("Ondroed")
     install_ndk()
-    build_android()
+    build_android(Arch.arm64)
+    build_android(Arch.arm32)
+    build_android(Arch.x86)
 else:
     run("cargo build --all")
