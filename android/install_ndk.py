@@ -84,7 +84,10 @@ def make_toolchain(make_tool: str, arch: Arch, api_level: str = "21"):
 
     os.environ["NDK_HOME"] = root
 
-    shutil.copyfile(f"{ndk_bin}/llvm-ar", f"{ndk_bin}/aarch64-linux-android-ar")
+    if is_windows:
+        shutil.copyfile(f"{ndk_bin}/llvm-ar.exe", f"{ndk_bin}/aarch64-linux-android-ar.exe")
+    else:
+        shutil.copyfile(f"{ndk_bin}/llvm-ar", f"{ndk_bin}/aarch64-linux-android-ar")
 
     if is_unix:
         for file in glob.glob(ndk_bin + "/*"):
