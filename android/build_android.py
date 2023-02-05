@@ -29,15 +29,43 @@ def build_android(arch: Arch):
     run(f"cargo build -p {lib_name} --target {arch.cargo_target()} --release --lib")
 
     jni_libs_dir = "mobile/android/app/src/main/jniLibs"
+    jni_libs_dir2 = "mobile/android/app/src/main/jni"
 
     jni_folder = f"{jni_libs_dir}/{arch.jni_folder()}"
+    jni_folder2 = f"{jni_libs_dir2}/{arch.jni_folder()}"
+
+    run(f"rm -rf {jni_folder}")
+    # run(f"rm -rf {jni_folder2}")
 
     run(f"mkdir -p {jni_libs_dir}")
     run(f"mkdir -p {jni_folder}")
 
+    # run(f"mkdir -p {jni_libs_dir2}")
+    run(f"mkdir -p {jni_folder2}")
+
     try:
-        os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
-                   f"{jni_folder}/lib{lib_name}.so")
+
+        src = f"target/{arch.cargo_target()}/release/lib{lib_name}_lib.so"
+        dst = f"{jni_folder}/lib{lib_name}.so"
+
+        # src2 = f"target/{arch.cargo_target()}/release/lib{lib_name}_lib.so"
+        # dst2 = f"{jni_folder2}/lib{lib_name}.so"
+
+        run(f"cp {src} {dst}")
+        # run(f"cp {src2} {dst2}")
+
+        # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
+        #            f"{jni_folder2}/lib{lib_name}.so")
+        
+        # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
+        #            f"{jni_folder}/lib{lib_name}.so")
+
+        # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
+        #            f"{jni_folder2}/lib{lib_name}.so")
+        
+        # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
+        #            f"{jni_folder}/lib{lib_name}.so")
+        
 
         # os.symlink(f"target/armv7-linux-androideabi/release/lib{lib_name}.so",
         #            f"{jni_libs_dir}/armeabi-v7a/lib{lib_name}.so")
