@@ -26,7 +26,7 @@ order:
 	cargo +nightly fmt --all; \
 	make clippy; \
 	typos; \
-	cargo test --all; \
+	cargo test; \
 	cargo build --all
 	    #	cargo machete; \
 
