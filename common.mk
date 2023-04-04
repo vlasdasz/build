@@ -30,6 +30,9 @@ order:
 	cargo build --all
 	    #	cargo machete; \
 
+test:
+	cargo test
+
 deps:
 	cargo install cargo-machete;\
     cargo install typos-cli;\
