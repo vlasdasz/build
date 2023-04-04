@@ -1,7 +1,10 @@
 
 all: desktop
 
-everything: order desktop ios
+clean:
+	cargo clean
+
+everything: order desktop ios android
 
 desktop:
 	./build/build.sh
@@ -21,11 +24,11 @@ clippy:
 order:
 	taplo fmt; \
 	cargo +nightly fmt --all; \
-	cargo test --all; \
-	cargo build --all; \
 	make clippy; \
 	typos; \
-	cargo machete
+	cargo test --all; \
+	cargo build --all
+	    #	cargo machete; \
 
 deps:
 	cargo install cargo-machete;\
