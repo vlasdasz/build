@@ -37,3 +37,6 @@ deps:
 	cargo install cargo-machete;\
     cargo install typos-cli;\
     cargo install taplo-cli
+
+flight:
+	./build/flight.sh
