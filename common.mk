@@ -31,7 +31,7 @@ order:
 	    #	cargo machete; \
 
 test:
-	cargo test
+	cargo test --all
 
 deps:
 	cargo install cargo-machete;\
