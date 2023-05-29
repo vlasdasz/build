@@ -38,5 +38,5 @@ deps:
     cargo install typos-cli;\
     cargo install taplo-cli
 
-flight:
+fly:
 	./build/flight.sh
