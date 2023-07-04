@@ -40,3 +40,6 @@ deps:
 
 fly:
 	./build/flight.sh
+
+release:
+	cargo build --profile=release-plus
