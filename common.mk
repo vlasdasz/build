@@ -42,4 +42,7 @@ fly:
 	./build/flight.sh
 
 release:
+	cargo build --release
+
+plus:
 	cargo build --profile=release-plus
