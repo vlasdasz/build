@@ -44,5 +44,11 @@ fly:
 release:
 	cargo build --release
 
+run-release:
+	cargo run --release
+
 plus:
 	cargo build --profile=release-plus
+
+run-plus:
+	cargo run --profile=release-plus
