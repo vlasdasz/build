@@ -8,8 +8,6 @@ SCHEME_NAME="Money Release"
 source env.sh
 
 EXPORT_OPTIONS_PLIST="export.plist"
-TESTFLIGHT_API_TOKEN="YourTestFlightAPIToken"
-TESTFLIGHT_TEAM_TOKEN="YourTestFlightTeamToken"
 ARCHIVE_PATH="build/$PROJECT_NAME.xcarchive"
 IPA_PATH="build/$SCHEME_NAME.ipa"
 
