@@ -27,4 +27,4 @@ xcodebuild -project $PROJECT_NAME.xcodeproj -scheme "$SCHEME_NAME" \
 # Export IPA
 xcodebuild -exportArchive -archivePath $ARCHIVE_PATH -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" -exportPath "build"
 
-xcrun altool --upload-app -f "$IPA_PATH" -u 146100@gmail.com -p $FLIGHT_PASS --type ios
+xcrun altool --upload-app -f "$IPA_PATH" -u 146100@gmail.com -p "$FLIGHT_PASS" --type ios

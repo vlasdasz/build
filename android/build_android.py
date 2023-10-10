@@ -1,4 +1,3 @@
-
 import os
 import glob
 import platform
@@ -6,13 +5,12 @@ import platform
 from install_ndk import Arch
 
 is_windows = platform.system() == "Windows"
-is_mac     = platform.system() == "Darwin"
-is_linux   = platform.system() == "Linux"
-
+is_mac = platform.system() == "Darwin"
+is_linux = platform.system() == "Linux"
 
 lib_name = os.path.basename(os.getcwd())
 
-if os.environ.get("ANDROID_LIB_NAME") != None:
+if os.environ.get("ANDROID_LIB_NAME") is not None:
     lib_name = os.environ["ANDROID_LIB_NAME"]
 
 print("Building lib: " + lib_name)
@@ -25,7 +23,6 @@ def run(string):
 
 
 def build_android(arch: Arch):
-
     run(f"cargo build -p {lib_name} --target {arch.cargo_target()} --release --lib")
 
     jni_libs_dir = "mobile/android/app/src/main/jniLibs"
@@ -56,16 +53,15 @@ def build_android(arch: Arch):
 
         # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
         #            f"{jni_folder2}/lib{lib_name}.so")
-        
+
         # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
         #            f"{jni_folder}/lib{lib_name}.so")
 
         # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
         #            f"{jni_folder2}/lib{lib_name}.so")
-        
+
         # os.symlink(f"target/{arch.cargo_target()}/release/lib{lib_name}.so",
         #            f"{jni_folder}/lib{lib_name}.so")
-        
 
         # os.symlink(f"target/armv7-linux-androideabi/release/lib{lib_name}.so",
         #            f"{jni_libs_dir}/armeabi-v7a/lib{lib_name}.so")
