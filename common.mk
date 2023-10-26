@@ -33,7 +33,10 @@ order:
 	    #	cargo machete; \
 
 test:
-	cargo test --all && cargo test --all --release
+	cargo test --all  && \
+    echo debug test: OK && \
+    cargo test --all --release && \
+    echo release test: OK
 
 deps:
 	cargo install cargo-machete;\
