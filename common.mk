@@ -23,15 +23,6 @@ clippy:
 
 lint: clippy
 
-order:
-	taplo fmt; \
-	cargo +nightly fmt --all; \
-	make clippy; \
-	typos; \
-	cargo test; \
-	cargo build --all
-	    #	cargo machete; \
-
 test:
 	cargo test --all  && \
     echo debug test: OK && \
