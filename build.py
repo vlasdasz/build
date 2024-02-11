@@ -44,7 +44,7 @@ uname = get_uname()
 
 is_fedora = "fedora" in uname
 is_freebsd = "freebsd" in uname
-# is_arch = "arch" in uname
+is_arch = "-ARCH" in uname
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "ios":
@@ -170,6 +170,9 @@ if is_linux and desktop:
         print("Freebsd")
         run("sudo pkg update")
         run("sudo pkg install cmake xorg pkgconf alsa-utils")
+    elif is_arch:
+        print("Arch")
+        run("sudo pacman -S gcc pkg-config cmake openssl make")
     else:
         print("Debian")
 
