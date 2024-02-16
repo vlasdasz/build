@@ -143,8 +143,8 @@ engine_path = f"{this_script_path}/.."
 
 def build_ios():
     run("rustup target add aarch64-apple-ios x86_64-apple-ios")
-    # run("cargo install cargo-lipo")
-    run("cargo install --git https://github.com/VladasZ/cargo-lipo cargo-lipo")
+    run("cargo install cargo-lipo")
+    # run("cargo install --git https://github.com/VladasZ/cargo-lipo cargo-lipo")
     run("cargo lipo --release")
     os.chdir("mobile/iOS")
     run("xcodebuild -showsdks")
