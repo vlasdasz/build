@@ -48,3 +48,6 @@ plus:
 
 run-plus:
 	cargo run --profile=release-plus
+
+ui:
+	cargo run -p ui_test && cargo run -p ui_test --release
