@@ -50,4 +50,4 @@ run-plus:
 	cargo run --profile=release-plus
 
 ui:
-	cargo run -p ui_test && cargo run -p ui_test --release
+	UI_TEST_CYCLES=2 cargo run -p ui_test && UI_TEST_CYCLES=4 cargo run -p ui_test --release
