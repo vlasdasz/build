@@ -165,7 +165,7 @@ if is_linux and desktop:
         print("Fedora")
         run("sudo dnf update")
         run("sudo dnf install libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
-            "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-1.2.10-2.fc38.aarch64")
+            "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-1.2.11-2.fc40.x86_64")
     elif is_freebsd:
         print("Freebsd")
         run("sudo pkg update")
