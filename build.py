@@ -163,6 +163,10 @@ def build_ios():
     run("cargo install cargo-lipo")
     # run("cargo install --git https://github.com/VladasZ/cargo-lipo cargo-lipo")
     run("cargo lipo --release")
+
+    run("cargo install test-mobile")
+    run("test-mobile")
+
     os.chdir("mobile/iOS")
     run("xcodebuild -showsdks")
 
