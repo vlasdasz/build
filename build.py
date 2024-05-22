@@ -203,8 +203,11 @@ if is_linux and desktop:
         run("sudo apt -y install " + deps)
     elif is_opensuse:
         print("openSUSE")
-        run("sudo zypper install -y alsa-lib llvm llvm-devel clang")
+        run("sudo zypper refresh")
+        run("sudo zypper update")
         run("sudo zypper install -y --type pattern devel_basis")
+        run("sudo zypper install -y --type pattern devel_C_C++")
+        run("sudo zypper install -y alsa-lib llvm llvm-devel clang")
     else:
         print("Unknown distro")
         exit(1)
