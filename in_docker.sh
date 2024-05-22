@@ -8,6 +8,7 @@ docker run \
     --mount type=bind,source="$HOST_DIR",target=/host \
     --cap-add=SYS_PTRACE \
     --security-opt seccomp=unconfined \
+#    --platform linux/amd64 \
     -t "$1" \
     \
     /bin/bash -c "cd /host && ./build/build.sh"

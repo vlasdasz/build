@@ -5,9 +5,13 @@
 echo "ANDROID_LIB_NAME: $ANDROID_LIB_NAME"
 echo "$IOS_PROJECT_NAME: $IOS_PROJECT_NAME"
 
+cat /etc/os-release
+
 if grep -qEi "(debian|ubuntu)" /etc/os-release; then
     apt update
     apt install curl python3 sudo -yq
+elif grep -qEi "Arch Linux" /etc/os-release; then
+    pacman -Sy python-pip sudo --noconfirm
 else
     echo "This is not Debian or Ubuntu. Command will not run."
 fi
