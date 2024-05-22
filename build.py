@@ -18,8 +18,8 @@ from build_android import build_android
 # import application.app.android.build
 
 is_windows = platform.system() == "Windows"
-is_mac     = platform.system() == "Darwin"
-is_linux   = platform.system() == "Linux"
+is_mac = platform.system() == "Darwin"
+is_linux = platform.system() == "Linux"
 
 unix = is_mac or is_linux
 
@@ -34,6 +34,13 @@ def get_uname():
         return ""
 
 
+def get_release():
+    if is_linux:
+        return str(subprocess.check_output(['cat', '/etc/os-release']).lower())
+    else:
+        return ""
+
+
 def run(string):
     print(string)
     if os.system(string):
@@ -41,10 +48,18 @@ def run(string):
 
 
 uname = get_uname()
+release = get_release()
 
-is_fedora = "fedora" in uname
+print("uname: " + uname)
+print("distro: " + platform.version())
+print("system: " + platform.system())
+print("release: " + get_release())
+
+is_fedora = "fedora" in release
 is_freebsd = "freebsd" in uname
 is_arch = os.path.isfile("/etc/arch-release")
+is_ubuntu = "ubuntu" in release
+is_debian = "debian" in release
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "ios":
@@ -157,15 +172,13 @@ def build_ios():
 print("Arch:")
 print(platform.uname())
 
-
 if is_linux and desktop:
     print("Lin setup")
 
     if is_fedora:
         print("Fedora")
-        run("sudo dnf update")
-        run("sudo dnf install libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
-            "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-1.2.11-2.fc40.x86_64")
+        run("sudo dnf install -y libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
+            "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-*")
     elif is_freebsd:
         print("Freebsd")
         run("sudo pkg update")
@@ -173,7 +186,7 @@ if is_linux and desktop:
     elif is_arch:
         print("Arch")
         run("sudo pacman -S gcc pkg-config cmake openssl make --noconfirm")
-    else:
+    elif is_ubuntu or is_debian:
         print("Debian")
 
         deps = "cmake mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev xorg-dev libasound2-dev"
@@ -183,10 +196,12 @@ if is_linux and desktop:
 
         run("sudo apt update")
         run("sudo apt -y install " + deps)
+    else:
+        print("Unknown distro")
+        exit(1)
 
     run("curl https://sh.rustup.rs -sSf | sh -s -- -y")
     os.environ["PATH"] += os.pathsep + "$HOME/.cargo/bin"
-
 
 if ios:
     build_ios()

@@ -10,4 +10,4 @@ docker run \
     --security-opt seccomp=unconfined \
     -t "$1" \
     \
-    /bin/bash -c "cd /host && ./build/build.sh" #    -t ubuntu:22.04 \
+    /bin/bash -c "cd /host && ./build/build.sh"
