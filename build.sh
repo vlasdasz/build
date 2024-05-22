@@ -9,11 +9,14 @@ cat /etc/os-release
 
 if grep -qEi "(debian|ubuntu)" /etc/os-release; then
     echo Debian
+    export DEBIAN_FRONTEND=noninteractive
     apt update
     apt install curl python3 sudo -yq
 elif grep -qEi "Arch Linux" /etc/os-release; then
     echo Arch
     pacman -Sy python-pip sudo --noconfirm
+elif grep -qEi "Amazon Linux" /etc/os-release; then
+    yum install -y sudo
 else
     echo "This is not Debian or Ubuntu. Command will not run."
 fi

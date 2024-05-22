@@ -60,6 +60,7 @@ is_freebsd = "freebsd" in uname
 is_arch = os.path.isfile("/etc/arch-release")
 is_ubuntu = "ubuntu" in release
 is_debian = "debian" in release
+is_amazon = "amazon" in release
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "ios":
@@ -175,7 +176,10 @@ print(platform.uname())
 if is_linux and desktop:
     print("Lin setup")
 
-    if is_fedora:
+    if is_amazon:
+        print("Amazon")
+        run("sudo yum install -y gcc gcc-c++ alsa-lib-devel")
+    elif is_fedora:
         print("Fedora")
         run("sudo dnf install -y libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
             "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-*")
@@ -185,7 +189,7 @@ if is_linux and desktop:
         run("sudo pkg install cmake xorg pkgconf alsa-utils")
     elif is_arch:
         print("Arch")
-        run("sudo pacman -S gcc pkg-config cmake openssl make --noconfirm")
+        run("sudo pacman -S gcc pkg-config cmake openssl make alsa-lib alsa-utils --noconfirm")
     elif is_ubuntu or is_debian:
         print("Debian")
 
