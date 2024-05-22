@@ -16,7 +16,7 @@ elif grep -qEi "Arch Linux" /etc/os-release; then
     echo Arch
     pacman -Sy python-pip sudo --noconfirm
 elif grep -qEi "Amazon Linux" /etc/os-release; then
-    yum install -y sudo
+    yum install -y sudo python3
 else
     echo "This is not Debian or Ubuntu. Command will not run."
 fi
