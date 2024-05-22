@@ -10,4 +10,4 @@ docker run \
     --security-opt seccomp=unconfined \
     -t "$1" \
     \
-    /bin/bash -c "cd /host && ./build/build.sh" && make test
+    /bin/bash -c "cd /host && ./build/build.sh" && sudo make test
