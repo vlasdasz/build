@@ -11,3 +11,5 @@ docker run \
     -t "$1" \
     \
     /bin/bash -c "cd /host && ./build/build.sh"
+
+# --platform linux/amd64 \
