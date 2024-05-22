@@ -49,7 +49,4 @@ plus:
 run-plus:
 	cargo run --profile=release-plus
 
-ui:
-	UI_TEST_CYCLES=2 cargo run -p ui_test && UI_TEST_CYCLES=4 cargo run -p ui_test --release
-
 .PHONY: test clippy
