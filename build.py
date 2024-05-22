@@ -217,3 +217,4 @@ elif android:
     build_android(Arch.x86)
 else:
     run("cargo build --all")
+    run("cargo test --all")
