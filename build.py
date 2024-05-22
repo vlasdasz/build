@@ -61,6 +61,7 @@ is_arch = os.path.isfile("/etc/arch-release")
 is_ubuntu = "ubuntu" in release
 is_debian = "debian" in release
 is_amazon = "amazon" in release
+is_opensuse = "opensuse" in release
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "ios":
@@ -200,6 +201,9 @@ if is_linux and desktop:
 
         run("sudo apt update")
         run("sudo apt -y install " + deps)
+    elif is_opensuse:
+        print("openSUSE")
+        run("sudo zypper install -y alsa-lib")
     else:
         print("Unknown distro")
         exit(1)
