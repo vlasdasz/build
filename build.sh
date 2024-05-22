@@ -17,6 +17,8 @@ elif grep -qEi "Arch Linux" /etc/os-release; then
     pacman -Sy python-pip sudo --noconfirm
 elif grep -qEi "Amazon Linux" /etc/os-release; then
     yum install -y sudo python3
+elif grep -qEi "Fedora" /etc/os-release; then
+    dnf install -y sudo
 else
     echo "This is not Debian or Ubuntu. Command will not run."
 fi
