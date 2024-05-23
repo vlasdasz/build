@@ -37,6 +37,9 @@ deps:
 fly:
 	./build/flight.sh
 
+profile:
+	./build/profile.sh
+
 release:
 	cargo build --release
 
