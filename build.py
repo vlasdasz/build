@@ -172,7 +172,7 @@ def build_ios():
 
     ios_project_name = os.environ['IOS_PROJECT_NAME']
 
-    run(f"xcodebuild -sdk iphonesimulator -scheme {ios_project_name} build")
+    run(f"xcodebuild -sdk iphonesimulator -scheme \"{ios_project_name}\" build")
 
 
 print("Arch:")

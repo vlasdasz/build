@@ -3,7 +3,7 @@
 . ./env.sh
 
 echo "ANDROID_LIB_NAME: $ANDROID_LIB_NAME"
-echo "$IOS_PROJECT_NAME: $IOS_PROJECT_NAME"
+echo "IOS_PROJECT_NAME: $IOS_PROJECT_NAME"
 
 cat /etc/os-release
 
