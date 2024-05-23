@@ -4,6 +4,8 @@ source env.sh
 
 echo "APP_NAME: $APP_NAME"
 
+cargo install --locked samply
+
 cargo build -p "$APP_NAME" --profile=release-debug
 
-samply record ./target/release-debug/$APP_NAME
+samply record ./target/release-debug/"$APP_NAME"
