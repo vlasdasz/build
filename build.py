@@ -164,6 +164,9 @@ def build_android():
     run("cargo install test-mobile")
     run("test-mobile")
 
+    run(". ./build/install_java.sh")
+    run(". ./build/install_ndk.sh")
+
     os.chdir("mobile/android")
     run("chmod +x ./gradlew")
     run("./gradlew build")
@@ -192,7 +195,7 @@ def build_ios():
 print("Arch:")
 print(platform.uname())
 
-if is_linux and desktop:
+if is_linux:
     print("Lin setup")
 
     if is_amazon:
@@ -212,7 +215,7 @@ if is_linux and desktop:
     elif is_ubuntu or is_debian:
         print("Debian")
 
-        deps = "cmake mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev xorg-dev libasound2-dev"
+        deps = "cmake mesa-common-dev libgl1-mesa-dev libglu1-mesa-dev xorg-dev libasound2-dev pkg-config libssl-dev"
 
         if platform.processor() != "aarch64":
             deps += " build-essential"
