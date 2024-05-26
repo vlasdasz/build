@@ -10,6 +10,6 @@ docker run \
     --security-opt seccomp=unconfined \
     -t soygul/android-docker \
     \
-    /bin/bash -c "cd /host && ./build/build.sh android"
+    /bin/bash -c "cd /host && export TEST_ENGINE_ANDROID_DOCKER_BUILD=true && ./build/build.sh android"
 
 # --platform linux/amd64 \

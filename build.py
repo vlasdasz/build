@@ -2,20 +2,8 @@
 
 import os
 import sys
-import glob
-import shutil
 import platform
 import subprocess
-import urllib.request
-
-sys.path.append("build/android")
-
-from install_ndk import install_ndk
-from install_ndk import Arch
-from build_android import build_android
-
-# import application.app.android.install_ndk
-# import application.app.android.build
 
 is_windows = platform.system() == "Windows"
 is_mac = platform.system() == "Darwin"
@@ -85,87 +73,15 @@ this_script_path = os.path.dirname(os.path.abspath(__file__))
 engine_path = f"{this_script_path}/.."
 
 
-# def setup_android():
-
-#     print("Add rust targets")
-#     run("rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android")
-
-#     host_platform = "linux" if is_linux else "darwin"
-#     arch_platform = host_platform + "-x86_64"
-#     ndk_bin = engine_path + "/ndk/bin"
-#     version = "r22b"
-#     api_level = "21"
-
-#     toolchains = "/ndk/android-ndk-" + version + "/toolchains/"
-
-#     os.environ["NDK_INCLUDE_DIR"] = engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/sysroot/usr/include"
-#     os.environ["PATH"] += ":" + ndk_bin
-
-#     print("NDK bin path:")
-#     print(ndk_bin)
-
-#     if os.path.isdir("ndk"):
-#         print("NDK directory already exists")
-#         return
-
-#     run("mkdir ndk")
-
-#     print("Downloading NDK")
-
-#     urllib.request.urlretrieve("https://dl.google.com/android/repository/android-ndk-" + version + "-" + arch_platform + ".zip", "ndk/ndk.zip")
-#     shutil.unpack_archive("ndk/ndk.zip", "ndk")
-
-#     print("Symlink NDK bin")
-
-#     os.symlink(engine_path + toolchains + "llvm/prebuilt/" + arch_platform + "/bin", ndk_bin)
-
-#     print("Symlink clang")
-#     shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang",
-#                     ndk_bin + "/aarch64-linux-android-clang")
-#     shutil.copyfile(ndk_bin + "/aarch64-linux-android" + api_level + "-clang++",
-#                     ndk_bin + "/aarch64-linux-android-clang++")
-#     shutil.copyfile(ndk_bin + "/llvm-ar",
-#                     ndk_bin + "/aarch64-linux-android-ar")
-
-#     shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang",
-#                     ndk_bin + "/arm-linux-androideabi-clang")
-#     shutil.copyfile(ndk_bin + "/armv7a-linux-androideabi" + api_level + "-clang++",
-#                     ndk_bin + "/arm-linux-androideabi-clang++")
-
-#     for file in glob.glob(ndk_bin + "/*"):
-#         run("chmod +x " + file)
-
-
-# def build_android():
-#     android_lib_name = os.environ['ANDROID_LIB_NAME']
-
-#     run(f"cargo build -p {android_lib_name} --target aarch64-linux-android --release --lib")
-#     run(f"cargo build -p {android_lib_name} --target armv7-linux-androideabi --release --lib")
-
-#     jni_libs_dir = f"{engine_path}/mobile/android/app/src/main/jniLibs"
-
-#     run(f"mkdir -p {jni_libs_dir}")
-#     run(f"mkdir -p {jni_libs_dir}/arm64-v8a")
-#     run(f"mkdir -p {jni_libs_dir}/armeabi-v7a")
-
-#     try:
-#         os.symlink(f"{engine_path}/target/aarch64-linux-android/release/lib{android_lib_name}.so",
-#                    f"{jni_libs_dir}/arm64-v8a/lib{android_lib_name}.so")
-
-#         os.symlink(f"{engine_path}/target/armv7-linux-androideabi/release/lib{android_lib_name}.so",
-#                    f"{jni_libs_dir}/armeabi-v7a/lib{android_lib_name}.so")
-#     except FileExistsError:
-#         print("exists")
-
-
 def build_android():
     run("rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-android x86_64-linux-android")
 
     run("cargo install test-mobile")
     run("test-mobile")
 
-    run(". ./build/install_java.sh")
-    run(". ./build/install_ndk.sh")
+    if "TEST_ENGINE_ANDROID_DOCKER_BUILD" in os.environ:
+        run(". ./build/install_java.sh")
+        run(". ./build/install_ndk.sh")
 
     os.chdir("mobile/android")
     run("chmod +x ./gradlew")
