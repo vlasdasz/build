@@ -12,6 +12,7 @@ echo "OS_NAME: $OS_NAME"
 if [[ "$CI" == "true" && "$1" == "android" ]]; then
     echo "Building android inside GitHub Actions "
     ./build/in_docker_android.sh
+    exit 0
 fi
 
 if [ "$OS_NAME" != "Darwin" ]; then
