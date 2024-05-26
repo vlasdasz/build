@@ -164,6 +164,10 @@ def build_android():
     run("cargo install test-mobile")
     run("test-mobile")
 
+    os.chdir("mobile/android")
+    run("chmod +x ./gradlew")
+    run("./gradlew build")
+
 
 def build_ios():
     run("rustup target add aarch64-apple-ios x86_64-apple-ios")
@@ -233,10 +237,7 @@ if ios:
     build_ios()
 elif android:
     print("Ondroed")
-    install_ndk()
-    build_android(Arch.arm64)
-    build_android(Arch.arm32)
-    build_android(Arch.x86)
+    build_android()
 else:
     run("cargo build --all")
     run("cargo test --all")
