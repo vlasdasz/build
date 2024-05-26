@@ -158,6 +158,13 @@ engine_path = f"{this_script_path}/.."
 #         print("exists")
 
 
+def build_android():
+    run("rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-android x86_64-linux-android")
+
+    run("cargo install test-mobile")
+    run("test-mobile")
+
+
 def build_ios():
     run("rustup target add aarch64-apple-ios x86_64-apple-ios")
     # run("cargo install cargo-lipo")
