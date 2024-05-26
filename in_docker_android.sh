@@ -8,7 +8,7 @@ docker run \
     --mount type=bind,source="$HOST_DIR",target=/host \
     --cap-add=SYS_PTRACE \
     --security-opt seccomp=unconfined \
-    -t soygul/android-docker \
+    -t mobiledevops/android-sdk-image \
     \
     /bin/bash -c "cd /host && export TEST_ENGINE_ANDROID_DOCKER_BUILD=true && ./build/build.sh android"
 
