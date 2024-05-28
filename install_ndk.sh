@@ -8,6 +8,8 @@ log() {
 # Ensure script exits on any error
 set -e
 
+rm -rf ~/Android/Sdk/cmdline-tools/tools/cmdline-tools
+
 # Set up Android SDK root if not set
 if [ -z "$ANDROID_HOME" ]; then
     export ANDROID_HOME="$HOME/Android/Sdk"
