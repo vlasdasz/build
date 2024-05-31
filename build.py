@@ -90,8 +90,7 @@ def build_android():
 
 def build_ios():
     run("rustup target add aarch64-apple-ios x86_64-apple-ios")
-    # run("cargo install cargo-lipo")
-    run("cargo install --git https://github.com/VladasZ/cargo-lipo cargo-lipo")
+    run("cargo install cargo-lipo")
 
     project_name = os.environ['APP_NAME']
 
