@@ -84,8 +84,9 @@ def build_android():
         run(". ./build/install_ndk.sh")
 
     os.chdir("mobile/android")
-    run("chmod +x ./gradlew")
-    run("./gradlew build")
+    if unix:
+        run("chmod +x ./gradlew")
+    run("gradlew build")
 
 
 def build_ios():
