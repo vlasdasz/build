@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ "$OS_NAME" != "Darwin" ]; then
+    exit 0
+fi
+
 sudo df -h
 sudo rm -rf /usr/share/dotnet
 sudo rm -rf /opt/ghc
