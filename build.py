@@ -35,10 +35,6 @@ def run(string):
         raise Exception("Shell script has failed")
 
 
-def github_actions():
-    return "CI" in os.environ or "GITHUB_RUN_ID" in os.environ
-
-
 uname = get_uname()
 release = get_release()
 
@@ -117,13 +113,6 @@ print(platform.uname())
 
 if is_linux:
     print("Lin setup")
-
-    if github_actions():
-        print("Github Actions Runner")
-        run("sudo rm -rf /usr/share/dotnet")
-        run("sudo rm -rf /opt/ghc")
-        run("sudo rm -rf \"/usr/local/share/boost\"")
-        run("sudo rm -rf \"$AGENT_TOOLSDIRECTORY\"")
 
     if is_amazon:
         print("Amazon")

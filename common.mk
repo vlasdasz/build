@@ -4,8 +4,6 @@ all: desktop
 clean:
 	cargo clean
 
-everything: order desktop ios android
-
 desktop:
 	./build/build.sh
 
@@ -47,10 +45,10 @@ deps:
     cargo install taplo-cli
 
 fly:
-	./build/flight.sh
+	./build/scripts/flight.sh
 
 profile:
-	./build/profile.sh
+	./build/scripts/profile.sh
 
 release:
 	cargo build --release
