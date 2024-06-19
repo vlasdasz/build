@@ -28,7 +28,6 @@ lint:
 	-A clippy::return_self_not_must_use \
 	-A clippy::needless_pass_by_value \
 	-A clippy::missing_panics_doc \
-	-A clippy::mismatched_target_os \
 	-A clippy::explicit-deref-methods \
 	-A unexpected_cfgs \
 	-A clippy::module_inception
