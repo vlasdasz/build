@@ -103,7 +103,7 @@ def build_ios():
     os.chdir("mobile/iOS")
     run("xcodebuild -showsdks")
 
-    ios_project_name = os.environ['IOS_SIMULATOR_SCHEME']
+    ios_project_name = os.environ['PROJECT_NAME']
 
     run(f"xcodebuild -sdk iphonesimulator -scheme \"{ios_project_name}\" build")
 
