@@ -1,6 +1,4 @@
 
-all: desktop
-
 clean:
 	cargo clean
 
