@@ -4,7 +4,7 @@ source env.sh
 
 EXPORT_OPTIONS_PLIST="export.plist"
 ARCHIVE_PATH="build/$PROJECT_NAME.xcarchive"
-IPA_PATH="build/$IOS_RELEASE_SCHEME.ipa"
+IPA_PATH="build/$PROJECT_NAME.ipa"
 
 make ios
 
@@ -13,16 +13,15 @@ cd mobile/iOS
 rm -rf build
 
 echo "PROJECT_NAME: $PROJECT_NAME"
-echo "IOS_RELEASE_SCHEME: $IOS_RELEASE_SCHEME"
 echo "ARCHIVE_PATH: $ARCHIVE_PATH"
 echo "IPA_PATH: $IPA_PATH"
 
 # Clean build folder
-xcodebuild clean -project "$PROJECT_NAME.xcodeproj" -scheme "$IOS_RELEASE_SCHEME" -configuration Release
+xcodebuild clean -project "$PROJECT_NAME.xcodeproj" -scheme "$PROJECT_NAME" -configuration Release
 
 # Build project
-xcodebuild -project "$PROJECT_NAME".xcodeproj -scheme "$IOS_RELEASE_SCHEME" \
-    -sdk iphoneos -configuration Release archive -archivePath "$ARCHIVE_PATH"
+xcodebuild -project "$PROJECT_NAME".xcodeproj -scheme "$PROJECT_NAME" \
+  -sdk iphoneos -configuration Release archive -archivePath "$ARCHIVE_PATH"
 
 # Export IPA
 xcodebuild -exportArchive -archivePath "$ARCHIVE_PATH" -exportOptionsPlist "$EXPORT_OPTIONS_PLIST" -exportPath "build"

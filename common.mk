@@ -43,4 +43,7 @@ plus:
 run-plus:
 	cargo run --profile=release-plus
 
+pr:
+	gh pr create --fill
+
 .PHONY: test clippy
