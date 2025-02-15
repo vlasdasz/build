@@ -17,6 +17,10 @@ echo "PROJECT_NAME: $PROJECT_NAME"
 echo "ARCHIVE_PATH: $ARCHIVE_PATH"
 echo "IPA_PATH: $IPA_PATH"
 
+echo codesign identity:
+
+security find-identity -p codesigning -v
+
 # Clean build folder
 xcodebuild clean -project "$PROJECT_NAME.xcodeproj" -scheme "$PROJECT_NAME" -configuration Release
 
