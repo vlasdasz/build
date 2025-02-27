@@ -86,7 +86,7 @@ def build_android():
     os.chdir("mobile/android")
     if unix:
         run("chmod +x ./gradlew")
-    run("./gradlew build")
+    run("gradlew build")
 
 
 def build_ios():
