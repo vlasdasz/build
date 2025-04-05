@@ -29,6 +29,6 @@ duration = int(end_time - start_time)
 if duration >= 60:
     minutes = duration // 60
     seconds = duration % 60
-    print(f"Time taken: {minutes}:{seconds:02d} (mm:ss)")
+    print(f"Time taken: {minutes}:{seconds:02d}")
 else:
     print(f"Time taken: {duration} seconds")
