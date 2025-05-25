@@ -49,4 +49,7 @@ pr:
 r:
 	cargo run --release
 
+fmt:
+	cargo +nightly fmt --all
+
 .PHONY: test clippy
