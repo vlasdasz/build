@@ -52,4 +52,7 @@ r:
 fmt:
 	cargo +nightly fmt --all
 
+dock:
+	python3 ./build/dock.py
+
 .PHONY: test clippy
