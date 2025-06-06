@@ -4,7 +4,6 @@ import subprocess
 import platform
 import sys
 from pathlib import Path
-import json
 import tempfile
 
 builder_name = "petuh_builder"
@@ -38,7 +37,11 @@ def load_env():
         print("CARGO_PACKAGE or IMAGE_TAG missing from .env")
         sys.exit(1)
 
-    return env["CARGO_PACKAGE"], env["IMAGE_TAG"]
+    cargo_package = env["CARGO_PACKAGE"]
+    image_tag = env["IMAGE_TAG"]
+    dockerfile = env.get("DOCKERFILE", "Dockerfile")
+
+    return cargo_package, image_tag, dockerfile
 
 
 def write_buildkitd_config():
@@ -55,9 +58,9 @@ def write_buildkitd_config():
 
 def main():
     try:
-        package, image_tag = load_env()
+        package, image_tag, dockerfile = load_env()
         run("cargo install cross --git https://github.com/cross-rs/cross")
-        run(f"cross build -p {package} --release")
+        run(f"cross build --package {package} --release")
 
         image_name = f"{insecure_registry}/{image_tag}"
 
@@ -66,7 +69,7 @@ def main():
 
         if os_name == "Linux" and arch == "x86_64":
             print("Building directly with docker (native x86_64 Linux)...")
-            run(f"docker build -t {image_name} .")
+            run(f"docker build --file {dockerfile} --tag {image_name} .")
             run(f"docker push {image_name}")
         else:
             print("Cross-building with docker buildx and config override...")
@@ -75,10 +78,15 @@ def main():
 
             config_path = write_buildkitd_config()
 
-            run(f"docker buildx create --name {builder_name} --use --driver docker-container --config {config_path}")
+            run(
+                f"docker buildx create --name {builder_name} --use --driver docker-container --config {config_path}"
+            )
             run("docker buildx inspect --bootstrap")
 
-            run(f"docker buildx build --platform linux/amd64 -t {image_name} --push .")
+            run(
+                f"docker buildx build --file {dockerfile} --platform linux/amd64 "
+                f"--tag {image_name} --push ."
+            )
 
     except subprocess.CalledProcessError as e:
         print(f"Error during execution: {e}")
