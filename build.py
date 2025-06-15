@@ -13,6 +13,7 @@ unix = is_mac or is_linux
 
 ios = False
 android = False
+debug = False
 
 
 def get_uname():
@@ -52,10 +53,10 @@ is_amazon = "amazon" in release
 is_opensuse = "opensuse" in release
 
 if len(sys.argv) > 1:
-    if sys.argv[1] == "ios":
-        ios = True
-    if sys.argv[1] == "android":
-        android = True
+    args = " ".join(sys.argv).lower()
+    ios = "ios" in args
+    android = "android" in args
+    debug = "debug" in args
 
 mobile = ios or android
 desktop = not mobile
@@ -95,7 +96,10 @@ def build_ios():
 
     project_name = os.environ['APP_NAME']
 
-    run(f"cargo lipo -p {project_name} --release")
+    if debug:
+        run(f"cargo lipo -p {project_name}")
+    else:
+        run(f"cargo lipo -p {project_name} --release")
 
     run("cargo install test-mobile")
     run("test-mobile")
