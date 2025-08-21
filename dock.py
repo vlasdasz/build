@@ -30,12 +30,13 @@ def write_buildkitd_config():
 
 
 def build_image():
-    if len(sys.argv) != 3:
-        print("Usage: dock.py <name> <version>")
+    if len(sys.argv) != 4:
+        print("Usage: dock.py <name> <dockerfile> <version>")
         sys.exit(1)
 
     name = sys.argv[1]
-    version = sys.argv[2]
+    dockerfile = sys.argv[2]
+    version = sys.argv[3]
 
     print("Cross-building with docker buildx and config override...")
 
@@ -49,7 +50,6 @@ def build_image():
 
     run("docker buildx inspect --bootstrap")
 
-    dockerfile = f"./{name}/Dockerfile"
     image_tag = f"{name}:{version}"
     image_name = f"{insecure_registry}/{image_tag}"
 
