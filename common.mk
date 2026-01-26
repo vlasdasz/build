@@ -52,4 +52,8 @@ r:
 fmt:
 	cargo +nightly fmt --all
 
+updates:
+	cargo install cargo-upgrades --locked
+	cargo upgrades
+
 .PHONY: test clippy
