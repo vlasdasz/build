@@ -1,6 +1,6 @@
 
 ios:
-	CFLAGS="" SDKROOT="" ./build/build.sh ios
+	SDKROOT=$(xcrun --sdk iphoneos --show-sdk-path) CFLAGS="" ./build/build.sh ios
 
 android:
 	./build/build.sh android
@@ -12,7 +12,7 @@ test:
 	echo release test: OK
 
 fly:
-	./build/scripts/flight.sh
+	SDKROOT=$(xcrun --sdk iphoneos --show-sdk-path) CFLAGS="" ./build/scripts/flight.sh
 
 profile:
 	./build/scripts/profile.sh
