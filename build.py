@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import platform
 import subprocess
+import sys
 
 is_windows = platform.system() == "Windows"
 is_mac = platform.system() == "Darwin"
@@ -18,14 +18,14 @@ debug = False
 
 def get_uname():
     if unix:
-        return str(subprocess.check_output(['uname', '-a']).lower())
+        return str(subprocess.check_output(["uname", "-a"]).lower())
     else:
         return ""
 
 
 def get_release():
     if is_linux:
-        return str(subprocess.check_output(['cat', '/etc/os-release']).lower())
+        return str(subprocess.check_output(["cat", "/etc/os-release"]).lower())
     else:
         return ""
 
@@ -75,7 +75,9 @@ engine_path = f"{this_script_path}/.."
 
 
 def build_android():
-    run("rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-android x86_64-linux-android")
+    run(
+        "rustup target add armv7-linux-androideabi aarch64-linux-android i686-linux-android x86_64-linux-android"
+    )
 
     run("cargo install test-mobile")
     run("test-mobile")
@@ -94,7 +96,7 @@ def build_ios():
     run("rustup target add aarch64-apple-ios x86_64-apple-ios")
     run("cargo install cargo-lipo")
 
-    project_name = os.environ['APP_NAME']
+    project_name = os.environ["APP_NAME"]
 
     if debug:
         run(f"cargo lipo -p {project_name}")
@@ -107,9 +109,9 @@ def build_ios():
     os.chdir("mobile/iOS")
     run("xcodebuild -showsdks")
 
-    ios_project_name = os.environ['PROJECT_NAME']
+    ios_project_name = os.environ["PROJECT_NAME"]
 
-    run(f"xcodebuild -sdk iphonesimulator -scheme \"{ios_project_name}\" build")
+    run(f'xcodebuild -sdk iphonesimulator -scheme "{ios_project_name}" build')
 
 
 print("Arch:")
@@ -123,15 +125,19 @@ if is_linux:
         run("sudo yum install -y gcc gcc-c++ alsa-lib-devel")
     elif is_fedora:
         print("Fedora")
-        run("sudo dnf install -y libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
-            "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-*")
+        run(
+            "sudo dnf install -y libXcursor-devel libXi-devel libXinerama-devel libXrandr-devel "
+            "perl make cmake automake gcc gcc-c++ kernel-devel alsa-lib-devel-*"
+        )
     elif is_freebsd:
         print("Freebsd")
         run("sudo pkg update")
         run("sudo pkg install cmake xorg pkgconf alsa-utils")
     elif is_arch:
         print("Arch")
-        run("sudo pacman -S gcc pkg-config cmake openssl make alsa-lib alsa-utils --noconfirm")
+        run(
+            "sudo pacman -S gcc pkg-config cmake openssl make alsa-lib alsa-utils --noconfirm"
+        )
     elif is_ubuntu or is_debian:
         print("Debian")
 
@@ -162,5 +168,5 @@ elif android:
     print("Ondroed")
     build_android()
 else:
-    run("cargo build --all")
-    run("cargo test --all")
+    run("cargo build --all --profile=ci")
+    run("cargo test --all --profile=ci")
