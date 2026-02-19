@@ -1,5 +1,7 @@
 #!/bin/bash
-set -eox pipefail
+# 
+set -euox pipefail
+
 source env.sh
 
 echo "APP_NAME: $APP_NAME"
