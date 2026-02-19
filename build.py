@@ -92,28 +92,6 @@ def build_android():
     run("./gradlew build")
 
 
-def build_ios():
-    run("rustup target add aarch64-apple-ios x86_64-apple-ios")
-    run("cargo install cargo-lipo")
-
-    project_name = os.environ["APP_NAME"]
-
-    if debug:
-        run(f"cargo lipo -p {project_name}")
-    else:
-        run(f"cargo lipo -p {project_name} --release")
-
-    run("cargo install test-mobile")
-    run("test-mobile")
-
-    os.chdir("mobile/iOS")
-    run("xcodebuild -showsdks")
-
-    ios_project_name = os.environ["PROJECT_NAME"]
-
-    run(f'xcodebuild -sdk iphonesimulator -scheme "{ios_project_name}" build')
-
-
 print("Arch:")
 print(platform.uname())
 
@@ -163,7 +141,7 @@ if is_linux:
     os.environ["PATH"] += os.pathsep + "$HOME/.cargo/bin"
 
 if ios:
-    build_ios()
+    run("./build/ios/build-project.sh")
 elif android:
     print("Ondroed")
     build_android()
