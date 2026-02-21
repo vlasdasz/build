@@ -2,6 +2,9 @@
 ios:
 	./build/ios/build-project.sh
 
+ios-lib:
+	./build/ios/build-lib.sh
+
 android:
 	./build/build.sh android
 
