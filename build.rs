@@ -1,6 +1,6 @@
 #!/usr/bin/env rust
 
-use anyhow::Result;
+use anyhow::{Result, bail};
 use shared::config;
 use shared::run::{probe, run};
 
@@ -81,9 +81,45 @@ i686-linux-android x86_64-linux-android",
     run("cargo install test-mobile --locked")?;
     run("test-mobile")?;
 
+    let abi = std::env::var("TEST_ENGINE_ANDROID_ABI").unwrap_or_default();
+    if !abi.is_empty() {
+        limit_targets(&abi)?;
+    }
+
+    // Gradle misses changed inputs on a docker bind mount even with vfs
+    // watching off and packs a stale .so into the APK. Removing the jni
+    // intermediates forces the merge, strip and package tasks every build.
+    for dir in [
+        "mobile/android/app/build/intermediates/merged_jni_libs",
+        "mobile/android/app/build/intermediates/merged_native_libs",
+        "mobile/android/app/build/intermediates/stripped_native_libs",
+    ] {
+        if std::path::Path::new(dir).exists() {
+            std::fs::remove_dir_all(dir)?;
+        }
+    }
+
     std::env::set_current_dir("mobile/android")?;
     run("chmod +x ./gradlew")?;
-    run("./gradlew build")?;
+    if abi.is_empty() {
+        run("./gradlew build")?;
+    } else {
+        run("./gradlew assembleDebug")?;
+    }
+    Ok(())
+}
+
+/// The generated project always lists all four ABIs. An emulator build needs
+/// only one, so the fresh gradle config is trimmed after every regeneration.
+fn limit_targets(abi: &str) -> Result<()> {
+    let path = "mobile/android/app/build.gradle.kts";
+    let all = "targets = listOf(\"x86_64\", \"x86\", \"arm\", \"arm64\")";
+    let one = format!("targets = listOf(\"{abi}\")");
+    let content = std::fs::read_to_string(path)?;
+    if !content.contains(all) {
+        bail!("expected targets line not found in {path}");
+    }
+    std::fs::write(path, content.replace(all, &one))?;
     Ok(())
 }
 

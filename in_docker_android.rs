@@ -20,6 +20,9 @@ fn main() -> Result<()> {
         format!("{image}-rustup:/usr/local/rustup"),
         format!("{image}-cargo:/usr/local/cargo"),
         format!("{image}-gradle:/root/.gradle"),
+        // Keeps the generated debug keystore, so the APK signature stays
+        // stable and `adb install -r` works across builds.
+        format!("{image}-android-home:/root/.android"),
     ];
 
     docker(&[
@@ -33,6 +36,9 @@ fn main() -> Result<()> {
 
     let host_dir = std::env::current_dir()?.display().to_string();
     let mount = format!("type=bind,source={host_dir},target=/host");
+
+    let abi = std::env::var("TEST_ENGINE_ANDROID_ABI").unwrap_or_default();
+    let abi_env = format!("TEST_ENGINE_ANDROID_ABI={abi}");
 
     let mut args = vec![
         "run",
@@ -57,11 +63,11 @@ fn main() -> Result<()> {
         // silently mid build with no error from cargo or gradle.
         "-e",
         "CARGO_BUILD_JOBS=4",
-        &image,
-        "/bin/bash",
-        "-c",
-        "rust ./build/build.rs android",
     ]);
+    if !abi.is_empty() {
+        args.extend(["-e", &abi_env]);
+    }
+    args.extend([&image, "/bin/bash", "-c", "rust ./build/build.rs android"]);
 
     docker(&args)
 }
