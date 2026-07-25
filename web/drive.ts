@@ -193,6 +193,9 @@ if (args.browser === "firefox") {
         join(profileDir, "user.js"),
         [
             'user_pref("dom.webgpu.enabled", true);',
+            // A covered window throttles the refresh driver to 1 fps, which
+            // stalls the suite the way Chrome occlusion does. Keep full rate.
+            'user_pref("layout.throttled_frame_rate", 60);',
             'user_pref("browser.shell.checkDefaultBrowser", false);',
             'user_pref("browser.aboutwelcome.enabled", false);',
             'user_pref("datareporting.policy.dataSubmissionEnabled", false);',
@@ -226,6 +229,11 @@ if (args.browser === "firefox") {
             `--user-data-dir=${profileDir}`,
             "--no-first-run",
             "--no-default-browser-check",
+            // Chrome suspends rendering when another window fully covers this
+            // one. Frames stop, animations freeze and the suite stalls until
+            // uncovered. Reproduced by covering the window during a present.
+            "--disable-backgrounding-occluded-windows",
+            "--disable-renderer-backgrounding",
             "--window-size=760,860",
             "--new-window",
             url,

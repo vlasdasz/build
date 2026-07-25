@@ -81,6 +81,8 @@ i686-linux-android x86_64-linux-android",
     run("cargo install test-mobile --locked")?;
     run("test-mobile")?;
 
+    fix_generated_project()?;
+
     let abi = std::env::var("TEST_ENGINE_ANDROID_ABI").unwrap_or_default();
     if !abi.is_empty() {
         limit_targets(&abi)?;
@@ -107,6 +109,86 @@ i686-linux-android x86_64-linux-android",
         run("./gradlew assembleDebug")?;
     }
     Ok(())
+}
+
+/// The pending template fixes from docs/android.md. The template still misses
+/// them, so a regeneration reverts them and they are reapplied after every
+/// one. Each replace skips silently once the template itself carries the fix.
+fn fix_generated_project() -> Result<()> {
+    let gradle = "mobile/android/app/build.gradle.kts";
+    let content = std::fs::read_to_string(gradle)?;
+
+    // games-activity must match the version the android-activity crate
+    // bundles, with 2.0.2 RegisterNatives aborts the process at startup.
+    let content = replace_once(
+        gradle,
+        content,
+        "androidx.games:games-activity:2.0.2",
+        "androidx.games:games-activity:4.4.0",
+    )?;
+
+    // Packaging can run before the fresh .so lands unless the jni merge
+    // tasks wait for the cargo build.
+    let content = replace_once(
+        gradle,
+        content,
+        "name == \"javaPreCompileDebug\" || name == \"javaPreCompileRelease\"",
+        "name == \"javaPreCompileDebug\" || name == \"javaPreCompileRelease\" ||
+            name == \"mergeDebugJniLibFolders\" || name == \"mergeReleaseJniLibFolders\"",
+    )?;
+
+    // The repo assets folder rides into the APK, filesystem::read_bytes
+    // reads it back through the AAssetManager.
+    let jni_debug = "        getByName(\"debug\") {
+            jniLibs.srcDir(\"$buildDir/rustJniLibs/android\")
+        }";
+    let with_assets = "        getByName(\"debug\") {
+            jniLibs.srcDir(\"$buildDir/rustJniLibs/android\")
+        }
+        getByName(\"main\") {
+            assets.srcDir(\"../../../assets\")
+        }";
+    let content = replace_once(gradle, content, jni_debug, with_assets)?;
+
+    std::fs::write(gradle, content)?;
+
+    // Sockets are denied without the INTERNET permission, which fails the
+    // Rest request test and the inspect listener.
+    let manifest = "mobile/android/app/src/main/AndroidManifest.xml";
+    let content = std::fs::read_to_string(manifest)?;
+    if !content.contains("android.permission.INTERNET") {
+        let content = replace_once(
+            manifest,
+            content,
+            "    <application",
+            "    <uses-permission android:name=\"android.permission.INTERNET\"/>
+
+    <application",
+        )?;
+        std::fs::write(manifest, content)?;
+    }
+
+    // File watching cannot work in the container.
+    let properties = "mobile/android/gradle.properties";
+    let content = std::fs::read_to_string(properties)?;
+    if !content.contains("org.gradle.vfs.watch") {
+        std::fs::write(properties, format!("{content}\norg.gradle.vfs.watch=false\n"))?;
+    }
+
+    Ok(())
+}
+
+/// Applies one fix. The fix already present is fine, the template landed it.
+/// Neither the old nor the new text found means the template changed shape
+/// and the fix needs a fresh look, so that fails loudly.
+fn replace_once(path: &str, content: String, from: &str, to: &str) -> Result<String> {
+    if content.contains(to) {
+        return Ok(content);
+    }
+    if !content.contains(from) {
+        bail!("expected `{from}` in {path}");
+    }
+    Ok(content.replace(from, to))
 }
 
 /// The generated project always lists all four ABIs. An emulator build needs
