@@ -7,7 +7,7 @@
 //                          [--port 44810] [--timeout 900] [--no-build]
 
 import { parseArgs } from "node:util";
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -64,9 +64,29 @@ let appSocket: Bun.ServerWebSocket<unknown> | undefined;
 let finished = false;
 let pendingExit: number | undefined;
 
+// A browser that dies or never opens its window says why on stderr, and
+// throwing that away leaves nothing to read but a silent timeout.
+const outDir = join(root, "target", "web-test");
+mkdirSync(outDir, { recursive: true });
+const browserLogPath = join(outDir, `browser-${args.browser}.log`);
+const browserLog = args.browser === "none" ? undefined : openSync(browserLogPath, "w");
+
+function printBrowserLog() {
+    if (!browserLog) return;
+    let text = "";
+    try {
+        text = readFileSync(browserLogPath, "utf8").trim();
+    } catch {
+        return;
+    }
+    if (!text) return;
+    console.error(`last browser output:\n${text.split("\n").slice(-40).join("\n")}`);
+}
+
 function finish(code: number) {
     if (finished) return;
     finished = true;
+    if (code !== 0) printBrowserLog();
     browserProc?.kill();
     if (profileDir) rmSync(profileDir, { recursive: true, force: true });
     // Give the kill a moment so the browser does not outlive the server.
@@ -100,12 +120,15 @@ const server = Bun.serve({
             return server.upgrade(req) ? undefined : new Response("upgrade failed", { status: 400 });
         }
 
+        // The body must be read before the response returns. Answering first
+        // tears the request down, `text()` then rejects with an AbortError,
+        // and the panic is swallowed by the unhandled rejection handler.
         if (url.pathname === "/te-panic" && req.method === "POST") {
-            req.text().then((body) => {
+            return req.text().then((body) => {
                 console.error(`APP PANIC: ${body}`);
                 finish(1);
+                return new Response(null, { status: 204 });
             });
-            return new Response(null, { status: 204 });
         }
 
         let path = normalize(url.pathname);
@@ -198,8 +221,18 @@ if (args.browser === "firefox") {
             'user_pref("layout.throttled_frame_rate", 60);',
             'user_pref("browser.shell.checkDefaultBrowser", false);',
             'user_pref("browser.aboutwelcome.enabled", false);',
+            // Firefox 136 and newer opens a Terms of Use modal on a fresh
+            // profile. It covers the page, the browser stops rendering behind
+            // it, and the suite freezes until the driver gives up. The
+            // aboutwelcome pref above does not suppress this one.
+            'user_pref("termsofuse.bypassNotification", true);',
+            'user_pref("datareporting.policy.dataSubmissionPolicyBypassNotification", true);',
             'user_pref("datareporting.policy.dataSubmissionEnabled", false);',
             'user_pref("app.update.disabledForTesting", true);',
+            // Every test logs "Started" and "OK" through the console, so this
+            // puts the suite's own progress in the browser log. Without it a
+            // stuck run says nothing about which test it stopped on.
+            'user_pref("devtools.console.stdout.content", true);',
         ].join("\n"),
     );
     browserProc = Bun.spawn(
@@ -215,7 +248,7 @@ if (args.browser === "firefox") {
             "760",
             url,
         ],
-        { stdout: "ignore", stderr: "ignore" },
+        { stdout: browserLog, stderr: browserLog },
     );
 } else if (args.browser === "chrome") {
     profileDir = mkdtempSync(join(tmpdir(), "te-chrome-"));
@@ -234,11 +267,18 @@ if (args.browser === "firefox") {
             // uncovered. Reproduced by covering the window during a present.
             "--disable-backgrounding-occluded-windows",
             "--disable-renderer-backgrounding",
+            // A machine with no GPU, which is every CI linux runner, offers no
+            // WebGPU adapter at all without these two. `requestAdapter` then
+            // resolves to null, the engine cannot start, and the page goes
+            // quiet with nothing to read. The second one lets Dawn fall back to
+            // the SwiftShader vulkan driver Chrome ships with itself.
+            "--enable-unsafe-webgpu",
+            "--enable-unsafe-swiftshader",
             "--window-size=760,860",
             "--new-window",
             url,
         ],
-        { stdout: "ignore", stderr: "ignore" },
+        { stdout: browserLog, stderr: browserLog },
     );
 } else if (args.browser !== "none") {
     console.error(`unknown browser: ${args.browser}`);
