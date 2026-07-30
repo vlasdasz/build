@@ -210,6 +210,14 @@ function browserBinary(name: string, candidates: (string | null)[]): string {
 // Always a real installed browser, headed, with a throwaway profile.
 // Headless reports different GPU state and Playwright ships patched builds,
 // neither says anything about what users run.
+
+// Color probes read the real surface, so the viewport must fit the biggest
+// test canvas, 640 by 1136 physical pixels. The linux runner renders at
+// scale 1 and browser chrome eats up to 150 pixels, so the window needs
+// this much height. A physical screen clamps it, which is fine on a mac
+// where scale 2 doubles the pixels anyway.
+const WINDOW_HEIGHT = 1300;
+
 if (args.browser === "firefox") {
     profileDir = mkdtempSync(join(tmpdir(), "te-firefox-"));
     writeFileSync(
@@ -245,7 +253,7 @@ if (args.browser === "firefox") {
             "-width",
             "760",
             "-height",
-            "760",
+            String(WINDOW_HEIGHT),
             url,
         ],
         { stdout: browserLog, stderr: browserLog },
@@ -274,7 +282,24 @@ if (args.browser === "firefox") {
             // the SwiftShader vulkan driver Chrome ships with itself.
             "--enable-unsafe-webgpu",
             "--enable-unsafe-swiftshader",
-            "--window-size=760,860",
+            // On linux the GPU process boots Vulkan for WebGPU. Left alone it
+            // probes the real driver and a vulkan surface against the X
+            // server, both absent on a GPU-less runner, and dies during init.
+            // After a few crashes Chrome settles into software compositing,
+            // where a WebGPU swap chain cannot exist, so the device is lost
+            // and the app panics on its first buffer. These route vulkan
+            // through the SwiftShader build Chrome ships and keep the
+            // compositor off vulkan surfaces. Linux only, a mac has Metal.
+            ...(process.platform === "linux"
+                ? [
+                      "--enable-features=Vulkan",
+                      "--use-angle=vulkan",
+                      "--use-vulkan=swiftshader",
+                      "--use-webgpu-adapter=swiftshader",
+                      "--disable-vulkan-surface",
+                  ]
+                : []),
+            `--window-size=760,${WINDOW_HEIGHT}`,
             "--new-window",
             url,
         ],
