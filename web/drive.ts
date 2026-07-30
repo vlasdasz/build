@@ -59,10 +59,19 @@ if (!args["no-build"]) {
 }
 
 let browserProc: ReturnType<typeof Bun.spawn> | undefined;
-let profileDir: string | undefined;
+const profileDirs: string[] = [];
 let appSocket: Bun.ServerWebSocket<unknown> | undefined;
 let finished = false;
 let pendingExit: number | undefined;
+
+// A wasm panic aborts the whole instance, there is no unwinding to catch it,
+// so one panicking test would hide every test after it. The panic beacon
+// names the test, the driver records it failed, relaunches the browser with
+// the dead tests in `te_test_skip`, and merges them into the final report.
+const panicked: { name: string; detail: string }[] = [];
+
+// A relaunch storm means something below the tests is broken, stop it.
+const MAX_RELAUNCHES = 25;
 
 // A browser that dies or never opens its window says why on stderr, and
 // throwing that away leaves nothing to read but a silent timeout.
@@ -88,7 +97,7 @@ function finish(code: number) {
     finished = true;
     if (code !== 0) printBrowserLog();
     browserProc?.kill();
-    if (profileDir) rmSync(profileDir, { recursive: true, force: true });
+    for (const dir of profileDirs) rmSync(dir, { recursive: true, force: true });
     // Give the kill a moment so the browser does not outlive the server.
     setTimeout(() => process.exit(code), 500);
 }
@@ -124,9 +133,18 @@ const server = Bun.serve({
         // tears the request down, `text()` then rejects with an AbortError,
         // and the panic is swallowed by the unhandled rejection handler.
         if (url.pathname === "/te-panic" && req.method === "POST") {
+            const testName = req.headers.get("x-te-test");
             return req.text().then((body) => {
-                console.error(`APP PANIC: ${body}`);
-                finish(1);
+                if (testName && panicked.length < MAX_RELAUNCHES) {
+                    console.error(`TEST PANICKED: ${testName}`);
+                    panicked.push({ name: testName, detail: body });
+                    relaunchBrowser();
+                } else {
+                    // No test name means the app died outside a test, a
+                    // relaunch would just die the same way.
+                    console.error(`APP PANIC: ${body}`);
+                    finish(1);
+                }
                 return new Response(null, { status: 204 });
             });
         }
@@ -162,10 +180,13 @@ const server = Bun.serve({
 
             if (frame.TestResults) {
                 const { total, failures } = frame.TestResults;
+                for (const p of panicked) {
+                    failures.push({ name: p.name, detail: p.detail });
+                }
                 for (const failure of failures) {
                     console.error(`TEST FAILED: ${failure.name}\n${failure.detail}`);
                 }
-                console.log(`TE_TEST_RESULT ${total} tests, ${failures.length} failed`);
+                console.log(`TE_TEST_RESULT ${total + panicked.length} tests, ${failures.length} failed`);
                 if (failures.length > 0) failWithScreenshot(1);
                 else finish(0);
                 return;
@@ -183,18 +204,41 @@ const server = Bun.serve({
 
             console.log(`unexpected inspect frame: ${String(message)}`);
         },
-        close() {
+        close(ws) {
+            // A relaunched page connects before the dead page's socket
+            // times out, so only the owner may clear the slot.
+            if (appSocket !== ws) return;
             appSocket = undefined;
             if (!finished) console.log("inspect socket closed");
         },
     },
 });
 
-let query = "?te_run_tests=1&te_inspect=1";
-if (args.only) query += `&te_test_only=${encodeURIComponent(args.only)}`;
-const url = `http://localhost:${server.port}/${query}`;
+// The app's query parsing does not url decode, so names go camel case.
+function camelName(spaced: string): string {
+    return spaced
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join("");
+}
 
-console.log(`serving ${dist} at ${url}`);
+function testUrl(): string {
+    let query = "?te_run_tests=1&te_inspect=1";
+    // Encode names one by one. Encoding the whole list turns the commas
+    // into %2C, and the app splits the raw query on plain commas.
+    if (args.only) {
+        query += `&te_test_only=${args.only
+            .split(",")
+            .map((name) => encodeURIComponent(name.trim()))
+            .join(",")}`;
+    }
+    if (panicked.length > 0) {
+        query += `&te_test_skip=${panicked.map((p) => camelName(p.name)).join(",")}`;
+    }
+    return `http://localhost:${server.port}/${query}`;
+}
+
+console.log(`serving ${dist} at ${testUrl()}`);
 
 // A missing browser must fail the lane at once, a spawn error would
 // otherwise surface as a silent hang until the timeout.
@@ -218,8 +262,9 @@ function browserBinary(name: string, candidates: (string | null)[]): string {
 // where scale 2 doubles the pixels anyway.
 const WINDOW_HEIGHT = 1300;
 
-if (args.browser === "firefox") {
-    profileDir = mkdtempSync(join(tmpdir(), "te-firefox-"));
+function launchFirefox(url: string) {
+    const profileDir = mkdtempSync(join(tmpdir(), "te-firefox-"));
+    profileDirs.push(profileDir);
     writeFileSync(
         join(profileDir, "user.js"),
         [
@@ -258,8 +303,11 @@ if (args.browser === "firefox") {
         ],
         { stdout: browserLog, stderr: browserLog },
     );
-} else if (args.browser === "chrome") {
-    profileDir = mkdtempSync(join(tmpdir(), "te-chrome-"));
+}
+
+function launchChrome(url: string) {
+    const profileDir = mkdtempSync(join(tmpdir(), "te-chrome-"));
+    profileDirs.push(profileDir);
     browserProc = Bun.spawn(
         [
             browserBinary("chrome", [
@@ -305,10 +353,25 @@ if (args.browser === "firefox") {
         ],
         { stdout: browserLog, stderr: browserLog },
     );
-} else if (args.browser !== "none") {
-    console.error(`unknown browser: ${args.browser}`);
-    finish(1);
 }
+
+function launchBrowser() {
+    if (args.browser === "firefox") {
+        launchFirefox(testUrl());
+    } else if (args.browser === "chrome") {
+        launchChrome(testUrl());
+    } else if (args.browser !== "none") {
+        console.error(`unknown browser: ${args.browser}`);
+        finish(1);
+    }
+}
+
+function relaunchBrowser() {
+    browserProc?.kill();
+    launchBrowser();
+}
+
+launchBrowser();
 
 setTimeout(() => {
     console.error(`no report after ${args.timeout} seconds`);
