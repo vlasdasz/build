@@ -4,7 +4,7 @@
 // with no automation protocol. See docs/ui-tests.md and docs/inspect.md.
 //
 //   bun build/web/drive.ts [--browser firefox|chrome|none] [--only "Name,Name"]
-//                          [--port 44810] [--timeout 900] [--no-build]
+//                          [--port 44810] [--timeout 900] [--no-build] [--human]
 
 import { parseArgs } from "node:util";
 import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -18,6 +18,7 @@ const { values: args } = parseArgs({
         port: { type: "string", default: "44810" },
         timeout: { type: "string", default: "900" },
         "no-build": { type: "boolean", default: false },
+        human: { type: "boolean", default: false },
     },
 });
 
@@ -224,6 +225,9 @@ function camelName(spaced: string): string {
 
 function testUrl(): string {
     let query = "?te_run_tests=1&te_inspect=1";
+    if (args.human) {
+        query += "&te_human=1";
+    }
     // Encode names one by one. Encoding the whole list turns the commas
     // into %2C, and the app splits the raw query on plain commas.
     if (args.only) {
@@ -373,7 +377,13 @@ function relaunchBrowser() {
 
 launchBrowser();
 
-setTimeout(() => {
-    console.error(`no report after ${args.timeout} seconds`);
-    failWithScreenshot(1);
-}, Number(args.timeout) * 1000);
+// A human run holds after every test until space, so any timeout would
+// just kill the review it exists to enable.
+if (args.human) {
+    console.log("human mode, space in the browser advances each test");
+} else {
+    setTimeout(() => {
+        console.error(`no report after ${args.timeout} seconds`);
+        failWithScreenshot(1);
+    }, Number(args.timeout) * 1000);
+}
