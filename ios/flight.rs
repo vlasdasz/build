@@ -48,10 +48,14 @@ OTHER_LDFLAGS=\"-Wl,-weak_framework,CoreGraphics -Wl,-weak_framework,Security\""
     // A newer rsync earlier on PATH, from nix or homebrew, makes the export die
     // with a bare "Copy failed" and the real cause only appears in the
     // xcdistributionlogs bundle. Putting the system paths first avoids that.
+    // allowProvisioningUpdates lets xcodebuild mint the Apple Distribution
+    // certificate and the App Store profile for a first time app, otherwise
+    // the export fails with "No profiles were found".
     run(&format!(
         "PATH=/usr/bin:/bin:/usr/sbin:/sbin:$PATH \
 xcodebuild -exportArchive -archivePath \"{archive_path}\" \
--exportOptionsPlist \"{export_options}\" -exportPath \"build\""
+-exportOptionsPlist \"{export_options}\" -exportPath \"build\" \
+-allowProvisioningUpdates"
     ))?;
     println!("export: OK");
 
