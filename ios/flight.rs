@@ -36,10 +36,16 @@ fn main() -> Result<()> {
     // the app before main. Weak linking makes the missing constant NULL instead.
     // test-mobile regenerates the project with no OTHER_LDFLAGS, so set it here
     // on the archive command so every TestFlight build keeps running on old iOS.
+    //
+    // allowProvisioningUpdates is needed here as well as on the export below.
+    // Archive signs too, and it runs first, so a bundle id that has never been
+    // built on this machine dies here with "No profiles were found" long before
+    // export gets a chance to mint one.
     run(&format!(
         "xcodebuild -project \"{}\".xcodeproj -scheme \"{}\" \
 -sdk iphoneos -configuration Release archive -archivePath \"{archive_path}\" \
-OTHER_LDFLAGS=\"-Wl,-weak_framework,CoreGraphics -Wl,-weak_framework,Security\"",
+OTHER_LDFLAGS=\"-Wl,-weak_framework,CoreGraphics -Wl,-weak_framework,Security\" \
+-allowProvisioningUpdates",
         config.project_name, config.project_name
     ))?;
     println!("build: OK");
