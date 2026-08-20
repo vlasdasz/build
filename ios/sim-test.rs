@@ -90,6 +90,10 @@ fn main() -> Result<()> {
 
     let config = config::read()?;
 
+    // `--human` is the simulator spelling of the desktop `--human`. The app
+    // holds after every check and every test until a tap on the screen.
+    let human = std::env::args().skip(1).any(|arg| arg == "--human");
+
     let lib = format!("{IOS_TARGET_DIR}/{SIM_TRIPLE}/release/{}", config.lib_name);
     let linked_lib = format!("target/universal/release/{}", config.lib_name);
     let symroot = format!(
@@ -142,15 +146,27 @@ SYMROOT={symroot} build",
     // TE_RUN_TESTS makes the app run the suite and exit. --console streams its
     // stdout here, so the result marker arrives before the launch returns.
     step("running the UI suite on the simulator");
+
+    // simctl passes only SIMCTL_CHILD_ prefixed variables into the app, so the
+    // narrowing list and the human flag are forwarded under that prefix.
+    let mut env = String::from("SIMCTL_CHILD_TE_RUN_TESTS=1");
+    if let Ok(only) = std::env::var("TE_TEST_ONLY") {
+        env.push_str(&format!(" SIMCTL_CHILD_TE_TEST_ONLY=\"{only}\""));
+    }
+    if human {
+        env.push_str(" SIMCTL_CHILD_TE_HUMAN=1");
+    }
+
     let launch = format!(
-        "SIMCTL_CHILD_TE_RUN_TESTS=1 xcrun simctl launch --console --terminate-running-process {device} {}",
+        "{env} xcrun simctl launch --console --terminate-running-process {device} {}",
         config.bundle_id
     );
 
     // Under make ui three lanes run at once, so this lane stays quiet to keep
     // the streams from mangling. Run on its own and it streams every test live
-    // like the desktop runner.
-    let output = if std::env::var("TE_IOS_QUIET").is_ok() {
+    // like the desktop runner. A human run always streams, it holds for the
+    // user and the prompts are the only sign of where it stands.
+    let output = if std::env::var("TE_IOS_QUIET").is_ok() && !human {
         probe(&format!("{launch} 2>&1"))
     } else {
         stream(&launch)?
