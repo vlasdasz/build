@@ -1,4 +1,4 @@
-# Builds test-engine Android APKs without any host Android tooling.
+# Builds hilen Android APKs without any host Android tooling.
 # Everything here is a pinned build-time dependency: JDK, Android SDK
 # pieces, NDK, python for rust-android-gradle, the rustscript interpreter
 # for the build scripts, rustup with no toolchain. The Rust toolchain,

@@ -9,7 +9,7 @@ android:
 	rust ./build/build.rs android
 
 android-emu:
-	TEST_ENGINE_ANDROID_ABI=arm64 rust ./build/build.rs android
+	HILEN_ANDROID_ABI=arm64 rust ./build/build.rs android
 
 test:
 	cargo test --all

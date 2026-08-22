@@ -8,7 +8,7 @@ use shared::config;
 fn main() -> Result<()> {
     let config = config::read()?;
 
-    // Named after the app, so two test-engine apps on one machine do not share
+    // Named after the app, so two hilen apps on one machine do not share
     // an image or fight over each other's caches.
     let image = format!("{}-android", config.app_name);
 
@@ -37,8 +37,8 @@ fn main() -> Result<()> {
     let host_dir = std::env::current_dir()?.display().to_string();
     let mount = format!("type=bind,source={host_dir},target=/host");
 
-    let abi = std::env::var("TEST_ENGINE_ANDROID_ABI").unwrap_or_default();
-    let abi_env = format!("TEST_ENGINE_ANDROID_ABI={abi}");
+    let abi = std::env::var("HILEN_ANDROID_ABI").unwrap_or_default();
+    let abi_env = format!("HILEN_ANDROID_ABI={abi}");
 
     let mut args = vec![
         "run",
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
         "-w",
         "/host",
         "-e",
-        "TEST_ENGINE_ANDROID_DOCKER_BUILD=true",
+        "HILEN_ANDROID_DOCKER_BUILD=true",
         // Release rustc under Rosetta eats gigabytes per job. Uncapped jobs OOM
         // the whole container on a default Docker Desktop VM, which dies
         // silently mid build with no error from cargo or gradle.

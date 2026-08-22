@@ -17,7 +17,7 @@ fn main() -> Result<()> {
 
     // The android build always runs inside docker, locally and in CI, so the
     // host needs no Android tooling. The env var marks being inside already.
-    if android && std::env::var("TEST_ENGINE_ANDROID_DOCKER_BUILD").is_err() {
+    if android && std::env::var("HILEN_ANDROID_DOCKER_BUILD").is_err() {
         run("rust ./build/in_docker_android.rs")?;
         return Ok(());
     }
@@ -78,12 +78,12 @@ fn build_android() -> Result<()> {
 i686-linux-android x86_64-linux-android",
     )?;
 
-    run("cargo install test-mobile --locked")?;
-    run("test-mobile")?;
+    run("cargo install hilen-mobile --locked")?;
+    run("hilen-mobile")?;
 
     fix_generated_project()?;
 
-    let abi = std::env::var("TEST_ENGINE_ANDROID_ABI").unwrap_or_default();
+    let abi = std::env::var("HILEN_ANDROID_ABI").unwrap_or_default();
     if !abi.is_empty() {
         limit_targets(&abi)?;
     }

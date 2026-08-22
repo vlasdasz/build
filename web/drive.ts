@@ -23,7 +23,7 @@ const { values: args } = parseArgs({
 });
 
 const root = normalize(join(import.meta.dir, "..", ".."));
-const appDir = join(root, "test-game");
+const appDir = join(root, "demo");
 const dist = join(appDir, "dist");
 const port = Number(args.port);
 
@@ -68,7 +68,7 @@ let pendingExit: number | undefined;
 // A wasm panic aborts the whole instance, there is no unwinding to catch it,
 // so one panicking test would hide every test after it. The panic beacon
 // names the test, the driver records it failed, relaunches the browser with
-// the dead tests in `te_test_skip`, and merges them into the final report.
+// the dead tests in `hilen_test_skip`, and merges them into the final report.
 const panicked: { name: string; detail: string }[] = [];
 
 // A relaunch storm means something below the tests is broken, stop it.
@@ -126,7 +126,7 @@ const server = Bun.serve({
     fetch(req, server) {
         const url = new URL(req.url);
 
-        if (url.pathname === "/te-inspect") {
+        if (url.pathname === "/hilen-inspect") {
             return server.upgrade(req) ? undefined : new Response("upgrade failed", { status: 400 });
         }
 
@@ -187,7 +187,7 @@ const server = Bun.serve({
                 for (const failure of failures) {
                     console.error(`TEST FAILED: ${failure.name}\n${failure.detail}`);
                 }
-                console.log(`TE_TEST_RESULT ${total + panicked.length} tests, ${failures.length} failed`);
+                console.log(`HILEN_TEST_RESULT ${total + panicked.length} tests, ${failures.length} failed`);
                 if (failures.length > 0) failWithScreenshot(1);
                 else finish(0);
                 return;
@@ -224,20 +224,20 @@ function camelName(spaced: string): string {
 }
 
 function testUrl(): string {
-    let query = "?te_run_tests=1&te_inspect=1";
+    let query = "?hilen_run_tests=1&hilen_inspect=1";
     if (args.human) {
-        query += "&te_human=1";
+        query += "&hilen_human=1";
     }
     // Encode names one by one. Encoding the whole list turns the commas
     // into %2C, and the app splits the raw query on plain commas.
     if (args.only) {
-        query += `&te_test_only=${args.only
+        query += `&hilen_test_only=${args.only
             .split(",")
             .map((name) => encodeURIComponent(name.trim()))
             .join(",")}`;
     }
     if (panicked.length > 0) {
-        query += `&te_test_skip=${panicked.map((p) => camelName(p.name)).join(",")}`;
+        query += `&hilen_test_skip=${panicked.map((p) => camelName(p.name)).join(",")}`;
     }
     return `http://localhost:${server.port}/${query}`;
 }

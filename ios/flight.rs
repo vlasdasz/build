@@ -34,7 +34,7 @@ fn main() -> Result<()> {
     // 13 dyld binds a strong data symbol eagerly, so a constant the device lacks
     // like kCGColorSpaceExtendedDisplayP3 or kSecUseDataProtectionKeychain kills
     // the app before main. Weak linking makes the missing constant NULL instead.
-    // test-mobile regenerates the project with no OTHER_LDFLAGS, so set it here
+    // hilen-mobile regenerates the project with no OTHER_LDFLAGS, so set it here
     // on the archive command so every TestFlight build keeps running on old iOS.
     //
     // allowProvisioningUpdates is needed here as well as on the export below.

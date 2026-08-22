@@ -12,7 +12,7 @@
 // Catalyst arm64 and fails to link. So this builds the target against the
 // iphonesimulator SDK directly with ARCHS=x86_64.
 //
-// Tests are triggered by TE_RUN_TESTS, not the inspector. The app runs the suite
+// Tests are triggered by HILEN_RUN_TESTS, not the inspector. The app runs the suite
 // on a worker task, prints a result marker and exits, so there is no mDNS to
 // disambiguate against the desktop lane running at the same time.
 //
@@ -22,7 +22,7 @@
 // prefix to read like the desktop runner.
 //
 // Under make ui this lane runs in parallel with the desktop lanes, which would
-// mangle three streams into one. That run sets TE_IOS_QUIET, and the lane goes
+// mangle three streams into one. That run sets HILEN_IOS_QUIET, and the lane goes
 // back to buffering and printing only [ios] milestones. A failed command dumps
 // its captured output either way.
 
@@ -124,8 +124,8 @@ cargo build -p {} --lib --target {SIM_TRIPLE} --release",
     // missing, not on every run. Regenerating wipes the device only weak
     // framework flags.
     if !std::path::Path::new(&xcodeproj).exists() {
-        run_quiet("cargo install test-mobile --locked")?;
-        run_quiet("test-mobile")?;
+        run_quiet("cargo install hilen-mobile --locked")?;
+        run_quiet("hilen-mobile")?;
     }
 
     step("building the simulator app");
@@ -143,18 +143,18 @@ SYMROOT={symroot} build",
     run_quiet("open -a Simulator")?;
     run_quiet(&format!("xcrun simctl install {device} \"{app}\""))?;
 
-    // TE_RUN_TESTS makes the app run the suite and exit. --console streams its
+    // HILEN_RUN_TESTS makes the app run the suite and exit. --console streams its
     // stdout here, so the result marker arrives before the launch returns.
     step("running the UI suite on the simulator");
 
     // simctl passes only SIMCTL_CHILD_ prefixed variables into the app, so the
     // narrowing list and the human flag are forwarded under that prefix.
-    let mut env = String::from("SIMCTL_CHILD_TE_RUN_TESTS=1");
-    if let Ok(only) = std::env::var("TE_TEST_ONLY") {
-        env.push_str(&format!(" SIMCTL_CHILD_TE_TEST_ONLY=\"{only}\""));
+    let mut env = String::from("SIMCTL_CHILD_HILEN_RUN_TESTS=1");
+    if let Ok(only) = std::env::var("HILEN_TEST_ONLY") {
+        env.push_str(&format!(" SIMCTL_CHILD_HILEN_TEST_ONLY=\"{only}\""));
     }
     if human {
-        env.push_str(" SIMCTL_CHILD_TE_HUMAN=1");
+        env.push_str(" SIMCTL_CHILD_HILEN_HUMAN=1");
     }
 
     let launch = format!(
@@ -166,7 +166,7 @@ SYMROOT={symroot} build",
     // the streams from mangling. Run on its own and it streams every test live
     // like the desktop runner. A human run always streams, it holds for the
     // user and the prompts are the only sign of where it stands.
-    let output = if std::env::var("TE_IOS_QUIET").is_ok() && !human {
+    let output = if std::env::var("HILEN_IOS_QUIET").is_ok() && !human {
         probe(&format!("{launch} 2>&1"))
     } else {
         stream(&launch)?
@@ -175,7 +175,7 @@ SYMROOT={symroot} build",
     run_quiet(&format!("xcrun simctl shutdown {device} || true"))?;
     probe("osascript -e 'tell application \"Simulator\" to quit'");
 
-    let marker = Regex::new(r"TE_TEST_RESULT (\d+) tests, (\d+) failed")?;
+    let marker = Regex::new(r"HILEN_TEST_RESULT (\d+) tests, (\d+) failed")?;
     let Some(caps) = marker.captures(&output) else {
         eprintln!("{output}");
         bail!("[ios] sim run produced no result marker. See the launch output above.");
