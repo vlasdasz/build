@@ -5,6 +5,7 @@
 //
 //   bun build/web/drive.ts [--browser firefox|chrome|none] [--only "Name,Name"]
 //                          [--port 44810] [--timeout 900] [--no-build] [--human]
+//                          [--present --only "Name"]
 
 import { parseArgs } from "node:util";
 import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -19,8 +20,17 @@ const { values: args } = parseArgs({
         timeout: { type: "string", default: "900" },
         "no-build": { type: "boolean", default: false },
         human: { type: "boolean", default: false },
+        present: { type: "boolean", default: false },
     },
 });
+
+// Presentation mode shows one view full screen for a human to play with.
+// No suite runs and no report ever comes, so it needs the one name and it
+// never times out.
+if (args.present && (!args.only || args.only.includes(","))) {
+    console.error("--present requires exactly one --only name");
+    process.exit(1);
+}
 
 const root = normalize(join(import.meta.dir, "..", ".."));
 const appDir = join(root, "demo");
@@ -224,7 +234,7 @@ function camelName(spaced: string): string {
 }
 
 function testUrl(): string {
-    let query = "?hilen_run_tests=1&hilen_inspect=1";
+    let query = args.present ? "?hilen_present=1&hilen_inspect=1" : "?hilen_run_tests=1&hilen_inspect=1";
     if (args.human) {
         query += "&hilen_human=1";
     }
@@ -377,10 +387,12 @@ function relaunchBrowser() {
 
 launchBrowser();
 
-// A human run holds after every test until space, so any timeout would
+// A human run holds after every test until ctrl, so any timeout would
 // just kill the review it exists to enable.
-if (args.human) {
-    console.log("human mode, space in the browser advances each test");
+if (args.present) {
+    console.log("presentation mode, close the browser or ctrl-c to finish");
+} else if (args.human) {
+    console.log("human mode, ctrl in the browser advances each test");
 } else {
     setTimeout(() => {
         console.error(`no report after ${args.timeout} seconds`);

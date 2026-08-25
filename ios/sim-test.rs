@@ -94,6 +94,13 @@ fn main() -> Result<()> {
     // holds after every check and every test until a tap on the screen.
     let human = std::env::args().skip(1).any(|arg| arg == "--human");
 
+    // `--present` shows the one view named by HILEN_TEST_ONLY full screen on
+    // the phone and keeps the simulator up until ctrl-c.
+    let present = std::env::args().skip(1).any(|arg| arg == "--present");
+    if present && std::env::var("HILEN_TEST_ONLY").is_err() {
+        bail!("[ios] --present needs HILEN_TEST_ONLY naming exactly one test");
+    }
+
     let lib = format!("{IOS_TARGET_DIR}/{SIM_TRIPLE}/release/{}", config.lib_name);
     let linked_lib = format!("target/universal/release/{}", config.lib_name);
     let symroot = format!(
@@ -149,7 +156,11 @@ SYMROOT={symroot} build",
 
     // simctl passes only SIMCTL_CHILD_ prefixed variables into the app, so the
     // narrowing list and the human flag are forwarded under that prefix.
-    let mut env = String::from("SIMCTL_CHILD_HILEN_RUN_TESTS=1");
+    let mut env = String::from(if present {
+        "SIMCTL_CHILD_HILEN_PRESENT=1"
+    } else {
+        "SIMCTL_CHILD_HILEN_RUN_TESTS=1"
+    });
     if let Ok(only) = std::env::var("HILEN_TEST_ONLY") {
         env.push_str(&format!(" SIMCTL_CHILD_HILEN_TEST_ONLY=\"{only}\""));
     }
@@ -166,7 +177,7 @@ SYMROOT={symroot} build",
     // the streams from mangling. Run on its own and it streams every test live
     // like the desktop runner. A human run always streams, it holds for the
     // user and the prompts are the only sign of where it stands.
-    let output = if std::env::var("HILEN_IOS_QUIET").is_ok() && !human {
+    let output = if std::env::var("HILEN_IOS_QUIET").is_ok() && !human && !present {
         probe(&format!("{launch} 2>&1"))
     } else {
         stream(&launch)?
@@ -174,6 +185,10 @@ SYMROOT={symroot} build",
 
     run_quiet(&format!("xcrun simctl shutdown {device} || true"))?;
     probe("osascript -e 'tell application \"Simulator\" to quit'");
+
+    if present {
+        return Ok(());
+    }
 
     let marker = Regex::new(r"HILEN_TEST_RESULT (\d+) tests, (\d+) failed")?;
     let Some(caps) = marker.captures(&output) else {
