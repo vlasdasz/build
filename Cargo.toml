@@ -7,7 +7,13 @@ edition = "2024"
 # so this is what lets the scripts `use shared::..` and pull in regex and tokio.
 [dependencies]
 anyhow = "1.0"
+ed25519-dalek = "2"
+hex = "0.4"
 regex = "1"
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
 shared = { path = "shared" }
 tokio = { version = "1", features = ["full"] }
 
