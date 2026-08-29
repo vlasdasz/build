@@ -31,6 +31,11 @@ fn main() -> Result<()> {
     }
     std::fs::create_dir_all("dist")?;
 
+    // target/release-win is a docker volume, so everything the host reads
+    // back is staged into a sibling dir like the linux lane does.
+    let stage = "target/win-stage/out";
+    std::fs::create_dir_all(stage)?;
+
     let image = format!("{}-win-builder", r.name);
     let platform = "linux/amd64";
     docker::build_image(&image, "Dockerfile.windows", platform)?;
@@ -39,7 +44,8 @@ fn main() -> Result<()> {
         script.push_str(&format!(
             r#"rustup target add {triple}
 cargo xwin build --release --target {triple}
-makensis -DNAME={name} -DVERSION={version} -DEXE=/work/apps/app/target/release-win/{triple}/release/{name}.exe -DICON=/work/apps/app/assets/icon.ico -DOUT=/work/apps/app/target/release-win/{name}-{arch}-setup.exe build/release/installer.nsi
+makensis -DNAME={name} -DVERSION={version} -DEXE=/work/apps/app/target/release-win/{triple}/release/{name}.exe -DICON=/work/apps/app/assets/icon.ico -DOUT=/work/apps/app/{stage}/{name}-{arch}-setup.exe build/release/installer.nsi
+cp /work/apps/app/target/release-win/{triple}/release/{name}.exe /work/apps/app/{stage}/{name}-{arch}.exe
 "#,
             name = r.name,
             version = r.version
@@ -47,11 +53,11 @@ makensis -DNAME={name} -DVERSION={version} -DEXE=/work/apps/app/target/release-w
     }
     docker::run_in(&image, platform, "release-win", &script)?;
 
-    for (arch, triple) in &targets {
+    for (arch, _) in &targets {
         let setup = format!("dist/{}", r.artifact(&format!("windows-{arch}-setup.exe")));
         let bare = format!("dist/{}", r.artifact(&format!("windows-{arch}.exe")));
-        std::fs::copy(format!("target/release-win/{}-{arch}-setup.exe", r.name), &setup)?;
-        std::fs::copy(format!("target/release-win/{triple}/release/{}.exe", r.name), &bare)?;
+        std::fs::copy(format!("{stage}/{}-{arch}-setup.exe", r.name), &setup)?;
+        std::fs::copy(format!("{stage}/{}-{arch}.exe", r.name), &bare)?;
         run(&format!("rust build/release/sign.rs {bare}"))?;
         println!("built {setup}");
         println!("built {bare}");
