@@ -39,7 +39,7 @@ fn main() -> Result<()> {
         script.push_str(&format!(
             r#"rustup target add {triple}
 cargo xwin build --release --target {triple}
-makensis -DNAME={name} -DVERSION={version} -DEXE=target/release-win/{triple}/release/{name}.exe -DICON=assets/icon.ico -DOUT=target/release-win/{name}-{arch}-setup.exe build/release/installer.nsi
+makensis -DNAME={name} -DVERSION={version} -DEXE=/work/apps/app/target/release-win/{triple}/release/{name}.exe -DICON=/work/apps/app/assets/icon.ico -DOUT=/work/apps/app/target/release-win/{name}-{arch}-setup.exe build/release/installer.nsi
 "#,
             name = r.name,
             version = r.version
