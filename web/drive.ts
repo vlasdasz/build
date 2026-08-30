@@ -225,14 +225,6 @@ const server = Bun.serve({
     },
 });
 
-// The app's query parsing does not url decode, so names go camel case.
-function camelName(spaced: string): string {
-    return spaced
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join("");
-}
-
 function testUrl(): string {
     let query = args.present ? "?hilen_present=1&hilen_inspect=1" : "?hilen_run_tests=1&hilen_inspect=1";
     if (args.human) {
@@ -247,7 +239,7 @@ function testUrl(): string {
             .join(",")}`;
     }
     if (panicked.length > 0) {
-        query += `&hilen_test_skip=${panicked.map((p) => camelName(p.name)).join(",")}`;
+        query += `&hilen_test_skip=${panicked.map((p) => encodeURIComponent(p.name)).join(",")}`;
     }
     return `http://localhost:${server.port}/${query}`;
 }
