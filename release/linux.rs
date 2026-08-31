@@ -3,8 +3,8 @@
 // The Linux release, built in docker so the output is the same on a dev box
 // and on a runner. One arch per run, `--arch x64|aarch64`, default is the
 // host's. Outputs in dist/:
-//   <name>-<v>-linux-<arch>.deb        first install
-//   <name>-<v>-linux-<arch>.AppImage   first install
+//   <name>-<v>-linux-<arch>.deb        first install, updates through apt
+//   <name>-<v>-linux-<arch>.AppImage   signed, self updates in place
 //   <name>-<v>-linux-<triple-arch>     the bare binary, signed for the manifest
 
 mod docker;
@@ -58,7 +58,7 @@ cp $BIN $OUT/{name}"#,
     std::fs::copy(format!("{out}/{}.deb", r.name), &deb)?;
     std::fs::copy(format!("{out}/{}.AppImage", r.name), &appimage)?;
     std::fs::copy(format!("{out}/{}", r.name), &bare)?;
-    run(&format!("rust build/release/sign.rs {bare}"))?;
+    run(&format!("rust build/release/sign.rs {bare} {appimage}"))?;
     for f in [&deb, &appimage, &bare] {
         println!("built {f}");
     }

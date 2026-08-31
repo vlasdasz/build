@@ -119,8 +119,10 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-// The universal mac binary serves both mac keys. Linux has no self
-// update, its users reinstall the package.
+// The universal mac binary serves both mac keys. Linux gets the bare
+// binary and the AppImage under its own key, the engine picks by how
+// the app runs. A deb install in /usr/bin is not user writable, the
+// engine offers it no update, those users update through apt.
 fn updater_manifest(r: &Release, has: &dyn Fn(&str) -> Option<String>) -> Result<UpdaterManifest> {
     let mut platforms = BTreeMap::new();
     let entries = [
@@ -128,6 +130,10 @@ fn updater_manifest(r: &Release, has: &dyn Fn(&str) -> Option<String>) -> Result
         ("macos-x86_64", "macos-universal"),
         ("windows-x86_64", "windows-x64.exe"),
         ("windows-aarch64", "windows-arm64.exe"),
+        ("linux-x86_64", "linux-x86_64"),
+        ("linux-aarch64", "linux-aarch64"),
+        ("linux-x86_64-appimage", "linux-x64.AppImage"),
+        ("linux-aarch64-appimage", "linux-aarch64.AppImage"),
     ];
     for (key, suffix) in entries {
         let Some(name) = has(suffix) else { continue };
