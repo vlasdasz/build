@@ -1,13 +1,14 @@
 #!/usr/bin/env rust
 
 // The mac release: a universal binary, the .app bundle, Developer ID signing,
-// notarization and the dmg. Signing and notarization run only when the Apple
-// secrets are in the env, so a local run without them still produces an
-// unsigned dmg to test the bundle with. Outputs in dist/:
+// notarization and the dmg. A local run without the Apple secrets still
+// produces an unsigned dmg to test the bundle with, but in CI a missing
+// APPLE_SIGNING_IDENTITY fails the build so an unsigned release can never
+// ship silently. Outputs in dist/:
 //   <name>-<v>-mac-universal.dmg      first install
 //   <name>-<v>-macos-universal        the bare binary the updater swaps in
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
 use shared::release::{self, Release};
 use shared::run::{capture, run};
 
@@ -17,6 +18,9 @@ fn main() -> Result<()> {
     let r = release::read()?;
     std::fs::create_dir_all("dist")?;
     let signing = std::env::var("APPLE_SIGNING_IDENTITY").ok().filter(|s| !s.is_empty());
+    if signing.is_none() && std::env::var("CI").is_ok() {
+        bail!("APPLE_SIGNING_IDENTITY is not set, refusing to build an unsigned release in CI");
+    }
     if signing.is_some() {
         unlock_keychain()?;
     }
