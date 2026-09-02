@@ -133,6 +133,10 @@ process.on("unhandledRejection", (err) => {
 
 const server = Bun.serve({
     port,
+    // The default of 10 seconds cut a multi megabyte CJK font mid body on
+    // a slow runner, the app then ran the suite with the default font and
+    // failed on pixels. 255 is the most Bun allows.
+    idleTimeout: 255,
     fetch(req, server) {
         const url = new URL(req.url);
 
