@@ -36,6 +36,10 @@ updates:
 	cargo install cargo-upgrades --locked
 	cargo upgrades
 
+# Install the system build deps and Rust on Linux and WSL. Idempotent.
+setup:
+	sh build/setup.sh
+
 # Desktop release. `make patch` or `make minor` tags and pushes, CI builds
 # from the tag with the release-* targets, one platform per runner. Every
 # script reads Cargo.toml and the [release] table of hilen.toml.
