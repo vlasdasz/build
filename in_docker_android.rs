@@ -63,6 +63,10 @@ fn main() -> Result<()> {
         // silently mid build with no error from cargo or gradle.
         "-e",
         "CARGO_BUILD_JOBS=4",
+        // No host lane compiles the android code, this build is its only
+        // lint, so a warning here fails it like clippy fails desktop.
+        "-e",
+        "RUSTFLAGS=-D warnings",
     ]);
     if !abi.is_empty() {
         args.extend(["-e", &abi_env]);

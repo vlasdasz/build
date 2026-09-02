@@ -203,6 +203,18 @@ const server = Bun.serve({
                 return;
             }
 
+            // A test pushes its frame the moment it fails, the page has
+            // nowhere to keep it. One file per test, CI uploads the dir.
+            if (frame.FailureScreenshot) {
+                const { test, png_base64 } = frame.FailureScreenshot;
+                const dir = join(root, "target", "web-test", "failures");
+                mkdirSync(dir, { recursive: true });
+                const shot = join(dir, `${test.replace(/[^A-Za-z0-9_-]+/g, "_")}.png`);
+                writeFileSync(shot, Buffer.from(png_base64, "base64"));
+                console.log(`failure screenshot for ${test} saved to ${shot}`);
+                return;
+            }
+
             if (frame.Screenshot) {
                 const shotDir = join(root, "target", "web-test");
                 mkdirSync(shotDir, { recursive: true });
