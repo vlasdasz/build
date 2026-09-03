@@ -1,5 +1,5 @@
 # Exports one Blender file next to itself as a .glb the engine loads,
-# see docs/scene.md. Static geometry with materials, no animation:
+# see docs/scene.md. Geometry with materials, skins and animations:
 #
 #   blender --background --python build/export_glb.py -- assets/models/tree.blend
 #
@@ -40,8 +40,8 @@ bpy.ops.export_scene.gltf(
     filepath=dst,
     export_format="GLB",
     export_apply=True,
-    export_animations=False,
-    export_skins=False,
+    export_animations=True,
+    export_skins=True,
     export_morph=False,
     export_cameras=False,
     export_lights=False,
