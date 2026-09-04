@@ -4,11 +4,11 @@
 // with no automation protocol. See docs/ui-tests.md and docs/inspect.md.
 //
 //   bun build/web/drive.ts [--browser firefox|chrome|none] [--only "Name,Name"]
-//                          [--port 44810] [--timeout 900] [--no-build] [--human]
-//                          [--present --only "Name"]
+//                          [--port 44810] [--timeout 900] [--stall 180] [--no-build]
+//                          [--human] [--present --only "Name"]
 
 import { parseArgs } from "node:util";
-import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { join, normalize } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -18,6 +18,7 @@ const { values: args } = parseArgs({
         only: { type: "string" },
         port: { type: "string", default: "44810" },
         timeout: { type: "string", default: "900" },
+        stall: { type: "string", default: "180" },
         "no-build": { type: "boolean", default: false },
         human: { type: "boolean", default: false },
         present: { type: "boolean", default: false },
@@ -90,6 +91,23 @@ const outDir = join(root, "target", "web-test");
 mkdirSync(outDir, { recursive: true });
 const browserLogPath = join(outDir, `browser-${args.browser}.log`);
 const browserLog = args.browser === "none" ? undefined : openSync(browserLogPath, "w");
+
+// The app's own log lines arrive over the inspect socket as the app writes
+// them, printed live like the desktop lane prints its stdout and kept in a
+// file next to the browser's. A stuck run then names the test it stopped
+// on and the last thing the app said, see the stall watchdog below.
+const appLogPath = join(outDir, `app-${args.browser}.log`);
+const appLog = openSync(appLogPath, "w");
+let lastActivity = Date.now();
+let lastLine = "";
+
+function appLine(level: string, message: string) {
+    const line = level === "INFO" ? message : `[${level}] ${message}`;
+    console.log(line);
+    writeSync(appLog, `${line}\n`);
+    lastActivity = Date.now();
+    lastLine = line;
+}
 
 function printBrowserLog() {
     if (!browserLog) return;
@@ -188,10 +206,17 @@ const server = Bun.serve({
     websocket: {
         open(ws) {
             appSocket = ws;
+            lastActivity = Date.now();
             console.log("app connected to the inspect socket");
         },
         message(_ws, message) {
             const frame = JSON.parse(String(message));
+            lastActivity = Date.now();
+
+            if (frame.Log) {
+                appLine(frame.Log.level, frame.Log.message);
+                return;
+            }
 
             if (frame.TestResults) {
                 const { total, failures } = frame.TestResults;
@@ -406,4 +431,15 @@ if (args.present) {
         console.error(`no report after ${args.timeout} seconds`);
         failWithScreenshot(1);
     }, Number(args.timeout) * 1000);
+
+    // A test that never finishes used to look like nothing until the
+    // timeout above. The app logs every test it starts, so a long silence
+    // is a stuck test, and the last line names it.
+    const stall = Number(args.stall);
+    setInterval(() => {
+        const idle = (Date.now() - lastActivity) / 1000;
+        if (idle < stall || finished) return;
+        console.error(`no output from the app for ${Math.round(idle)} seconds, last line: ${lastLine || "none"}`);
+        failWithScreenshot(1);
+    }, 5_000);
 }
